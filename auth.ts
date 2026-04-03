@@ -1,4 +1,3 @@
-// src/auth.ts
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
@@ -10,6 +9,7 @@ import { User } from '@/lib/db/models/user.model'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: MongoDBAdapter(await getMongoClient()) as Adapter,
+  session: { strategy: 'jwt' },
 
   providers: [
     CredentialsProvider({
@@ -27,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user || !user.password) return null
 
         const isValid = await bcrypt.compare(
-          credentials.password as string,
+          String(credentials.password),
           user.password,
         )
 
@@ -60,8 +60,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
-  session: { strategy: 'jwt' },
-
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -79,6 +77,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.isVerified = token.isVerified as boolean
       }
       return session
+    },
+    async authorized({ auth, request }) {
+      const { pathname } = request.nextUrl
+      if (pathname.startsWith('/admin')) {
+        return auth?.user?.role === 'admin'
+      }
+      return true
     },
   },
 
