@@ -1,14 +1,11 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/*@custom-variant dark (&:is(.dark *));*/
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* @custom-variant dark (&:is(.dark *)); */
 
 @layer base {
   :root {
+    /* Design tokens (HSL values for utility usage like bg-[hsl(var(--background))]) */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -28,7 +25,8 @@ body {
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 142.1 76.2% 36.3%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -62,13 +60,94 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  /* Better defaults for all devices */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  /* Media defaults for responsiveness */
+  img,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  /* Prevent overflow issues on small screens */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  /* Focus visibility for keyboard users */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
-  .header-button {
-    @apply cursor-pointer p-1 border border-transparent hover:border-white rounded-xs;
+  /* Use this on page wrappers for mobile-safe horizontal spacing */
+  .container-app {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 lg:px-8;
   }
+
+  .section-gap {
+    @apply py-4 sm:py-6 md:py-8;
+  }
+
+  .card {
+    @apply rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] shadow-sm;
+  }
+
+  .header-button {
+    @apply cursor-pointer rounded-md border border-transparent p-2 transition-colors hover:border-white/80;
+  }
+
   .h1-bold {
-    @apply font-bold text-2xl lg:text-3xl;
+    @apply text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl;
+  }
+
+  .h2-bold {
+    @apply text-xl font-semibold tracking-tight sm:text-2xl;
+  }
+
+  .text-muted {
+    @apply text-[hsl(var(--muted-foreground))];
+  }
+
+  /* Prevent accidental horizontal overflow from long content */
+  .safe-wrap {
+    @apply wrap-break-word;
   }
 }

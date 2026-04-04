@@ -1,6 +1,5 @@
 import { SearchIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-
 import {
   Select,
   SelectContent,
@@ -9,12 +8,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { APP_NAME } from '@/lib/constants'
-const categories = ['CT', 'Ultrasound', 'X-Ray', 'MRI']
-export default async function Search() {
+
+const categories = ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD']
+
+export default function Search() {
   return (
-    <form action='/search' method='GET' className='flex  items-stretch h-10 '>
-      <Select name='category'>
-        <SelectTrigger className='w-auto h-full dark:border-gray-200 bg-gray-100 text-black border-r  rounded-r-none rounded-l-md'>
+    <form
+      action='/search'
+      method='GET'
+      className='flex h-10 w-full items-stretch rounded-md'
+      role='search'
+      aria-label='Site search'
+    >
+      <Select name='category' defaultValue='all'>
+        <SelectTrigger className='h-full w-22 rounded-r-none rounded-l-md border-r bg-gray-100 text-black'>
           <SelectValue placeholder='All' />
         </SelectTrigger>
         <SelectContent position='popper'>
@@ -26,17 +33,21 @@ export default async function Search() {
           ))}
         </SelectContent>
       </Select>
+
       <Input
-        className='flex-1 rounded-none dark:border-gray-200 bg-gray-100 text-black text-base h-full'
-        placeholder={`Search Site ${APP_NAME}`}
+        className='h-full flex-1 rounded-none border-x-0 bg-gray-100 text-base text-black'
+        placeholder={`Search ${APP_NAME}`}
         name='q'
         type='search'
+        autoComplete='off'
       />
+
       <button
         type='submit'
-        className='bg-primary text-primary-foreground text-black rounded-s-none rounded-e-md h-full px-3 py-2 '
+        className='h-full rounded-l-none rounded-r-md bg-primary px-3 text-primary-foreground'
+        aria-label='Submit search'
       >
-        <SearchIcon className='w-6 h-6' />
+        <SearchIcon className='h-5 w-5' />
       </button>
     </form>
   )

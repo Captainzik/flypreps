@@ -1,63 +1,67 @@
-// app/auth/signin/page.tsx
-'use client'
-
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import GoogleSignInButton from '@/components/auth/google-signin-button'
+import BackHomeButton from '@/components/auth/back-home-button'
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const params = useSearchParams()
-  const callbackUrl = params.get('callbackUrl') ?? '/'
-
-  async function handleCredentials(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
-    await signIn('credentials', {
-      email,
-      password,
-      redirect: true,
-      callbackUrl,
-    })
-    setLoading(false)
-  }
-
   return (
-    <main className='mx-auto max-w-md p-6'>
-      <h1 className='mb-4 text-2xl font-bold'>Sign in</h1>
-      <form onSubmit={handleCredentials} className='space-y-3'>
-        <input
-          className='w-full rounded border p-2'
-          type='email'
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder='Email'
-          required
-        />
-        <input
-          className='w-full rounded border p-2'
-          type='password'
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder='Password'
-          required
-        />
-        <button
-          className='w-full rounded bg-black p-2 text-white'
-          disabled={loading}
-        >
-          {loading ? 'Signing in...' : 'Sign in'}
-        </button>
+    <main className='mx-auto w-full max-w-md px-4 py-10'>
+      <h1 className='mb-6 text-2xl font-bold'>Sign in</h1>
+
+      <form className='space-y-4'>
+        <div>
+          <label htmlFor='email' className='mb-1 block text-sm font-medium'>
+            Email
+          </label>
+          <input
+            id='email'
+            name='email'
+            type='email'
+            required
+            className='w-full rounded-md border px-3 py-2'
+            placeholder='you@example.com'
+          />
+        </div>
+
+        <div>
+          <label htmlFor='password' className='mb-1 block text-sm font-medium'>
+            Password
+          </label>
+          <input
+            id='password'
+            name='password'
+            type='password'
+            required
+            className='w-full rounded-md border px-3 py-2'
+            placeholder='••••••••'
+          />
+        </div>
+
+        <Button type='submit' className='w-full'>
+          Sign in
+        </Button>
       </form>
 
-      <button
-        className='mt-3 w-full rounded border p-2'
-        onClick={() => signIn('google', { callbackUrl })}
-      >
-        Signin with Google
-      </button>
+      <div className='my-5 flex items-center gap-3'>
+        <div className='h-px flex-1 bg-border' />
+        <span className='text-xs text-muted-foreground'>OR</span>
+        <div className='h-px flex-1 bg-border' />
+      </div>
+
+      <div className='space-y-3'>
+        <GoogleSignInButton />
+        <BackHomeButton />
+      </div>
+
+      <div className='mt-6 rounded-lg border p-4 text-center'>
+        <p className='text-sm text-muted-foreground'>Don’t have an account?</p>
+        <Link
+          href='/signup'
+          className='mt-3 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+        >
+          Create account
+        </Link>
+      </div>
     </main>
   )
 }
