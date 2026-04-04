@@ -1,109 +1,153 @@
+import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getQuizAttemptResult } from '@/lib/actions/quizAttempt.actions'
 
 type PageProps = {
-  params: {
+  params: Promise<{
     attemptId: string
+  }>
+}
+
+type ResultAnswer = {
+  questionId: string
+  questionText: string
+  selectedOptionIndex?: number
+  correctOptionIndex: number
+  isCorrect: boolean
+  pointsEarned: number
+  tips?: string
+  options: { text: string }[]
+}
+
+type QuizAttemptResult = {
+  attemptId: string
+  quiz: {
+    id: string
+    name: string
+    category: string
   }
+  score: number
+  maxScore: number
+  percentage: number
+  completedAt?: Date | string
+  answers: ResultAnswer[]
 }
 
 export default async function QuizAttemptResultPage({ params }: PageProps) {
+  const { attemptId } = await params
+
   const session = await auth()
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/quiz')
+    redirect(`/signin?callbackUrl=/quiz/attempt/${attemptId}/result`)
   }
 
-  let result: Awaited<ReturnType<typeof getQuizAttemptResult>>
+  let result: QuizAttemptResult
+
   try {
-    result = await getQuizAttemptResult({
-      attemptId: params.attemptId,
+    result = (await getQuizAttemptResult({
+      attemptId,
       userId: session.user.id,
-    })
+    })) as QuizAttemptResult
   } catch {
     notFound()
   }
 
   const correctCount = result.answers.filter((a) => a.isCorrect).length
-  const incorrectCount = result.answers.length - correctCount
+  const totalCount = result.answers.length
 
   return (
-    <main className='mx-auto max-w-4xl px-4 py-8'>
-      <header className='mb-6'>
-        <h1 className='text-2xl font-bold'>Quiz Result</h1>
-        <p className='text-sm text-gray-600'>
-          {result.quiz.name} • {result.quiz.category}
-        </p>
-      </header>
+    <main className='space-y-6'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+        <h1 className='text-2xl font-bold text-slate-900'>Quiz Result</h1>
+        <p className='mt-1 text-sm text-slate-600'>{result.quiz.name}</p>
 
-      <section className='mb-8 rounded-xl border p-4'>
-        <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
-          <Stat label='Score' value={`${result.score} / ${result.maxScore}`} />
-          <Stat label='Percentage' value={`${result.percentage.toFixed(2)}%`} />
-          <Stat label='Correct' value={`${correctCount}`} />
-          <Stat label='Incorrect' value={`${incorrectCount}`} />
+        <div className='mt-4 grid gap-3 sm:grid-cols-3'>
+          <div className='rounded-lg bg-slate-50 p-4'>
+            <p className='text-xs text-slate-500'>Score</p>
+            <p className='text-lg font-bold text-slate-900'>
+              {result.score} / {result.maxScore}
+            </p>
+          </div>
+          <div className='rounded-lg bg-slate-50 p-4'>
+            <p className='text-xs text-slate-500'>Percentage</p>
+            <p className='text-lg font-bold text-slate-900'>
+              {result.percentage.toFixed(1)}%
+            </p>
+          </div>
+          <div className='rounded-lg bg-slate-50 p-4'>
+            <p className='text-xs text-slate-500'>Correct</p>
+            <p className='text-lg font-bold text-slate-900'>
+              {correctCount} / {totalCount}
+            </p>
+          </div>
+        </div>
+
+        <div className='mt-4 flex flex-wrap gap-3'>
+          <Link
+            href='/quiz/start'
+            className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
+          >
+            Try another quiz
+          </Link>
+          <Link
+            href={`/quiz/${result.quiz.id}`}
+            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50'
+          >
+            Back to quiz details
+          </Link>
         </div>
       </section>
 
-      <section className='space-y-4'>
-        {result.answers.map((a, idx) => (
-          <article key={a.questionId || idx} className='rounded-xl border p-4'>
-            <div className='mb-2 flex items-center justify-between'>
-              <h2 className='font-semibold'>
-                Q{idx + 1}. {a.questionText}
-              </h2>
-              <span
-                className={`rounded px-2 py-1 text-xs font-medium ${
-                  a.isCorrect
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {a.isCorrect ? 'Correct' : 'Incorrect'}
-              </span>
-            </div>
+      <section className='space-y-3'>
+        {result.answers.map((ans, index) => {
+          const userChoice =
+            typeof ans.selectedOptionIndex === 'number'
+              ? (ans.options[ans.selectedOptionIndex]?.text ?? 'No answer')
+              : 'No answer'
 
-            <ul className='mb-3 list-disc pl-5 text-sm'>
-              {a.options.map((opt, i) => {
-                const isSelected = a.selectedOptionIndex === i
-                const isCorrect = a.correctOptionIndex === i
+          const correctChoice =
+            ans.correctOptionIndex >= 0
+              ? (ans.options[ans.correctOptionIndex]?.text ?? 'N/A')
+              : 'N/A'
 
-                return (
-                  <li
-                    key={`${a.questionId}-${i}`}
-                    className={
-                      isCorrect
-                        ? 'text-green-700'
-                        : isSelected
-                          ? 'text-red-700'
-                          : 'text-gray-800'
-                    }
-                  >
-                    {opt.text}
-                    {isSelected ? ' (Your answer)' : ''}
-                    {isCorrect ? ' (Correct answer)' : ''}
-                  </li>
-                )
-              })}
-            </ul>
+          return (
+            <article
+              key={ans.questionId || `${attemptId}-${index}`}
+              className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
+            >
+              <div className='mb-2 flex items-center justify-between gap-3'>
+                <p className='text-sm font-semibold text-slate-900'>
+                  Q{index + 1}. {ans.questionText}
+                </p>
+                <span
+                  className={`rounded-full px-2 py-1 text-xs font-medium ${
+                    ans.isCorrect
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-rose-100 text-rose-700'
+                  }`}
+                >
+                  {ans.isCorrect ? 'Correct' : 'Incorrect'}
+                </span>
+              </div>
 
-            {a.tips ? (
-              <p className='rounded bg-blue-50 p-2 text-sm text-blue-900'>
-                Tip: {a.tips}
+              <p className='text-sm text-slate-700'>
+                <span className='font-medium'>Your answer:</span> {userChoice}
               </p>
-            ) : null}
-          </article>
-        ))}
+              <p className='mt-1 text-sm text-slate-700'>
+                <span className='font-medium'>Correct answer:</span>{' '}
+                {correctChoice}
+              </p>
+
+              {ans.tips ? (
+                <p className='mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800'>
+                  Tip: {ans.tips}
+                </p>
+              ) : null}
+            </article>
+          )
+        })}
       </section>
     </main>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className='rounded-lg bg-gray-50 p-3'>
-      <p className='text-xs uppercase tracking-wide text-gray-500'>{label}</p>
-      <p className='text-lg font-semibold'>{value}</p>
-    </div>
   )
 }

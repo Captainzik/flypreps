@@ -19,6 +19,170 @@ const isMongoDuplicateKeyError = (err: unknown): err is { code: number } => {
 }
 
 /**
+ * Create a new in-progress attempt for a quiz.
+ */
+export async function startQuizAttempt(input: {
+  quizId: string
+  userId: string
+  attemptKey?: string
+}) {
+  const { quizId, userId, attemptKey } = input
+
+  const quiz = await Quiz.findById(quizId)
+    .select('_id category questions')
+    .lean()
+
+  if (!quiz) {
+    throw new Error('Quiz not found')
+  }
+
+  if (!Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+    throw new Error('Quiz has no questions')
+  }
+
+  const answers: IQuizAttempt['answers'] = quiz.questions.map((qId) => ({
+    question: qId,
+    selectedOptionIndex: undefined,
+    isCorrect: false,
+    pointsEarned: 0,
+    timeSpentMs: 0,
+  }))
+
+  const attempt = await QuizAttempt.create({
+    user: userId,
+    quiz: quiz._id,
+    attemptKey:
+      attemptKey ||
+      `attempt_${userId}_${quizId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+    startedAt: new Date(),
+    completed: false,
+    score: 0,
+    maxScore: quiz.questions.length * 10,
+    percentage: 0,
+    questionsAnswered: 0,
+    answers,
+    category: quiz.category,
+  })
+
+  return attempt
+}
+
+/**
+ * Fetch active (in-progress) attempt with quiz and question details.
+ */
+export async function getActiveQuizAttempt(params: {
+  attemptId: string
+  userId: string
+}) {
+  const attempt = await QuizAttempt.findOne({
+    _id: params.attemptId,
+    user: params.userId,
+  })
+    .populate({
+      path: 'quiz',
+      select: 'name category',
+    })
+    .populate({
+      path: 'answers.question',
+      select: 'question options',
+    })
+    .lean()
+
+  if (!attempt) return null
+  if (attempt.completed) return null
+
+  const quizObj = attempt.quiz as unknown as {
+    _id: mongoose.Types.ObjectId
+    name: string
+    category: string
+  }
+
+  const questions = (attempt.answers || []).map((a) => {
+    const q = a.question as unknown as {
+      _id: mongoose.Types.ObjectId
+      question: string
+      options: Array<{ text: string; isCorrect?: boolean }>
+    }
+
+    return {
+      questionId: q?._id?.toString?.() ?? '',
+      questionText: q?.question ?? '',
+      options: (q?.options || []).map((o) => ({ text: o.text })),
+      selectedOptionIndex: a.selectedOptionIndex,
+    }
+  })
+
+  return {
+    _id: attempt._id,
+    quiz: {
+      id: quizObj?._id?.toString?.() ?? '',
+      name: quizObj?.name ?? 'Quiz',
+      category: quizObj?.category ?? '',
+    },
+    questions,
+    answers: (attempt.answers || []).map((a) => ({
+      questionId:
+        (
+          a.question as unknown as { _id?: mongoose.Types.ObjectId }
+        )?._id?.toString?.() ?? '',
+      selectedOptionIndex: a.selectedOptionIndex,
+    })),
+    completed: attempt.completed,
+  }
+}
+
+/**
+ * Save one answer into an active attempt.
+ */
+export async function submitAnswerToAttempt(input: {
+  attemptId: string
+  userId: string
+  questionId: string
+  selectedOptionIndex: number
+  timeSpentMs?: number
+}) {
+  const {
+    attemptId,
+    userId,
+    questionId,
+    selectedOptionIndex,
+    timeSpentMs = 0,
+  } = input
+
+  const attempt = await QuizAttempt.findOne({
+    _id: attemptId,
+    user: userId,
+  })
+
+  if (!attempt) throw new Error('Attempt not found')
+  if (attempt.completed) throw new Error('Attempt already completed')
+
+  const answerIndex = attempt.answers.findIndex(
+    (a) => a.question.toString() === questionId,
+  )
+
+  if (answerIndex === -1) {
+    throw new Error('Question does not belong to this attempt')
+  }
+
+  attempt.answers[answerIndex].selectedOptionIndex = selectedOptionIndex
+  attempt.answers[answerIndex].timeSpentMs = timeSpentMs
+
+  attempt.questionsAnswered = attempt.answers.filter(
+    (a) => typeof a.selectedOptionIndex === 'number',
+  ).length
+
+  await attempt.save()
+
+  return {
+    attemptId: attempt._id.toString(),
+    questionsAnswered: attempt.questionsAnswered,
+    totalQuestions: attempt.answers.length,
+    completed: attempt.completed,
+  }
+}
+
+/**
  * Existing flow: submit + grade + complete in one call.
  * (Kept intact, with your current imports/logic.)
  */
@@ -129,7 +293,6 @@ export async function submitQuizAttempt(
 
     await attempt.save({ session })
 
-    // User update
     const now = new Date()
     const todayLocal = new Date(
       now.getFullYear(),
@@ -186,7 +349,6 @@ export async function submitQuizAttempt(
       )
     }
 
-    // Leaderboard update with totalPercentage + recomputed averagePercentage
     const period = getCurrentWeekPeriod()
 
     const lbAfterInc = await Leaderboard.findOneAndUpdate(
@@ -370,7 +532,6 @@ export async function completeQuizAttempt(
 
     await attempt.save({ session })
 
-    // user streak + lifetime score
     const todayLocal = new Date(
       completedAt.getFullYear(),
       completedAt.getMonth(),
