@@ -46,6 +46,7 @@ export default function SignUpPage() {
         return
       }
 
+      // Keep redirect behavior consistent across auth flows
       await signIn('credentials', {
         email: form.email,
         password: form.password,
@@ -70,6 +71,7 @@ export default function SignUpPage() {
           required
           value={form.email}
           onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+          disabled={loading}
         />
         <input
           className='w-full rounded border p-2'
@@ -77,6 +79,7 @@ export default function SignUpPage() {
           autoComplete='username'
           value={form.username}
           onChange={(e) => setForm((s) => ({ ...s, username: e.target.value }))}
+          disabled={loading}
         />
         <input
           className='w-full rounded border p-2'
@@ -84,6 +87,7 @@ export default function SignUpPage() {
           autoComplete='name'
           value={form.fullName}
           onChange={(e) => setForm((s) => ({ ...s, fullName: e.target.value }))}
+          disabled={loading}
         />
         <input
           className='w-full rounded border p-2'
@@ -93,6 +97,7 @@ export default function SignUpPage() {
           required
           value={form.password}
           onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+          disabled={loading}
         />
 
         {error ? <p className='text-sm text-red-600'>{error}</p> : null}
@@ -108,7 +113,7 @@ export default function SignUpPage() {
         <div className='h-px flex-1 bg-border' />
       </div>
 
-      <GoogleSignInButton />
+      <GoogleSignInButton callbackUrl='/' label='Sign up with Google' />
 
       <div className='mt-4'>
         <BackHomeButton />

@@ -24,26 +24,31 @@ export default function SignInPage() {
     setLoading(true)
     setError('')
 
-    const res = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    })
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      })
 
-    setLoading(false)
+      if (!res) {
+        setError('Sign in failed. Please try again.')
+        setLoading(false)
+        return
+      }
 
-    if (!res) {
+      if (res.error) {
+        setError('Invalid email or password.')
+        setLoading(false)
+        return
+      }
+
+      window.location.href = res.url ?? callbackUrl
+    } catch {
       setError('Sign in failed. Please try again.')
-      return
+      setLoading(false)
     }
-
-    if (res.error) {
-      setError('Invalid email or password.')
-      return
-    }
-
-    window.location.href = res.url ?? callbackUrl
   }
 
   return (
@@ -59,6 +64,7 @@ export default function SignInPage() {
           placeholder='Email'
           autoComplete='email'
           required
+          disabled={loading}
         />
         <input
           className='w-full rounded border p-2'
@@ -68,6 +74,7 @@ export default function SignInPage() {
           placeholder='Password'
           autoComplete='current-password'
           required
+          disabled={loading}
         />
 
         {error ? <p className='text-sm text-red-600'>{error}</p> : null}
@@ -83,7 +90,7 @@ export default function SignInPage() {
         <div className='h-px flex-1 bg-border' />
       </div>
 
-      <GoogleSignInButton />
+      <GoogleSignInButton callbackUrl={callbackUrl} />
 
       <div className='mt-4'>
         <BackHomeButton />

@@ -4,18 +4,26 @@ import { useRouter } from 'next/navigation'
 import { Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export default function BackHomeButton() {
+type BackHomeButtonProps = {
+  className?: string
+  label?: string
+}
+
+export default function BackHomeButton({
+  className,
+  label = 'Back to home',
+}: BackHomeButtonProps) {
   const router = useRouter()
 
   return (
     <Button
       type='button'
       variant='outline'
-      className='w-full'
+      className={className ?? 'w-full'}
       onClick={() => router.push('/')}
     >
       <Home className='mr-2 h-4 w-4' />
-      Back to home
+      {label}
     </Button>
   )
 }
