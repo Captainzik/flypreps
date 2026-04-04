@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { User } from '@/lib/db/models/user.model'
 import { CreateUserSchema } from '@/lib/validator'
+import { connectToDatabase } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    // CRITICAL: ensure DB is connected before any model query
+    await connectToDatabase()
+
+    const body: unknown = await req.json()
     const parsed = CreateUserSchema.parse(body)
 
     const existingEmail = await User.findOne({ email: parsed.email }).lean()
@@ -55,13 +59,23 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 },
     )
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Signup failed'
+
+    // Connection errors are server-side; validation errors are client-side
+    const isConnectionError =
+      message.includes('Database connection failed') ||
+      message.includes('MONGODB_URI') ||
+      message.includes('buffering timed out') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ENOTFOUND')
+
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Signup failed',
+        message,
       },
-      { status: 400 },
+      { status: isConnectionError ? 500 : 400 },
     )
   }
 }

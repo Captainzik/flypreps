@@ -27,21 +27,23 @@ if (!global.mongoose) {
 export const connectToDatabase = async (
   MONGODB_URI = process.env.MONGODB_URI,
 ): Promise<Mongoose> => {
-  // Return existing connection if healthy
-  if (cached.conn && cached.conn.connection.readyState >= 1) {
-    return cached.conn
-  }
-
   if (!MONGODB_URI) {
     throw new Error('MONGODB_URI is not defined in environment variables')
   }
 
-  // Only start connecting if we're not already in progress
+  // Reuse existing healthy connection
+  if (cached.conn && cached.conn.connection.readyState === 1) {
+    return cached.conn
+  }
+
+  // Create one shared in-flight promise
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: process.env.MONGODB_DB || undefined,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      minPoolSize: 1,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4,
     }
@@ -58,23 +60,24 @@ export const connectToDatabase = async (
 
     return cached.conn
   } catch (error) {
-    cached.promise = null // reset on failure
+    cached.promise = null // reset on failure so next call retries
     throw new Error(`Database connection failed: ${(error as Error).message}`)
   }
 }
 
 // Helper to get the MongoClient for NextAuth adapter
 export async function getMongoClient(): Promise<MongoClient> {
-  if (cached.authClient) {
-    return cached.authClient
-  }
+  if (cached.authClient) return cached.authClient
 
   const uri = process.env.MONGODB_URI
   if (!uri) {
     throw new Error('MONGODB_URI is not defined in environment variables')
   }
 
-  const client = new MongoClient(uri)
+  const client = new MongoClient(uri, {
+    serverSelectionTimeoutMS: 10000,
+    family: 4,
+  })
   await client.connect()
   cached.authClient = client
   return client

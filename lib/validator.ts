@@ -29,40 +29,61 @@ export const CreateOptionSchema = z.object({
   isCorrect: z.boolean(),
 })
 
-export const CreateQuestionSchema = z
-  .object({
-    question: z.string().min(10, 'Question too short').max(600).trim(),
-    image: UrlOptional,
-    quizName: z.string().min(3).max(100).trim(),
-    tips: z.string().max(2000).trim().optional().default(''),
-    isPublished: z.boolean().default(false),
-    options: z
-      .array(CreateOptionSchema)
-      .min(2, 'At least 2 options required')
-      .max(4, 'Max 4 options allowed')
-      .refine(
-        (opts) =>
-          new Set(opts.map((o) => o.text.trim().toLowerCase())).size ===
-          opts.length,
-        {
-          message: 'Option texts must be unique (case-insensitive)',
-          path: ['options'],
-        },
-      ),
-  })
-  .refine((q) => q.options.filter((o) => o.isCorrect).length === 1, {
+/**
+ * IMPORTANT:
+ * Keep a base object schema (no top-level refine) so we can safely call .partial()
+ * in Zod v4. Then add refinements on derived schemas.
+ */
+const CreateQuestionBaseSchema = z.object({
+  question: z.string().min(10, 'Question too short').max(600).trim(),
+  image: UrlOptional,
+  quizName: z.string().min(3).max(100).trim(),
+  tips: z.string().max(2000).trim().optional().default(''),
+  isPublished: z.boolean().default(false),
+  options: z
+    .array(CreateOptionSchema)
+    .min(2, 'At least 2 options required')
+    .max(4, 'Max 4 options allowed')
+    .refine(
+      (opts) =>
+        new Set(opts.map((o) => o.text.trim().toLowerCase())).size ===
+        opts.length,
+      {
+        message: 'Option texts must be unique (case-insensitive)',
+        path: ['options'],
+      },
+    ),
+})
+
+export const CreateQuestionSchema = CreateQuestionBaseSchema.refine(
+  (q) => q.options.filter((o) => o.isCorrect).length === 1,
+  {
     message: 'Exactly one correct option required',
     path: ['options'],
-  })
+  },
+)
 
 export const QuestionUpdateSchema = CreateQuestionSchema.extend({
   _id: MongoId,
 })
-export const QuestionPatchSchema = CreateQuestionSchema.partial().extend({
-  _id: MongoId,
-})
 
-// ─── Quiz ────────────────────────────────────────────────────────────────────
+export const QuestionPatchSchema = CreateQuestionBaseSchema.partial()
+  .extend({
+    _id: MongoId,
+  })
+  .refine(
+    (q) => {
+      // if options are being patched, validate exactly one correct option
+      if (!q.options) return true
+      return q.options.filter((o) => o.isCorrect).length === 1
+    },
+    {
+      message: 'Exactly one correct option required when options are provided',
+      path: ['options'],
+    },
+  )
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
 export const CreateQuizSchema = z.object({
   name: z.string().min(3).max(100).trim(),
   description: z.string().min(10).max(2000).trim(),
@@ -109,7 +130,7 @@ export const PublishQuizSchema = z.object({
   isPublished: z.boolean().default(true),
 })
 
-// ─── Review ──────────────────────────────────────────────────────────────────
+// ─── Review ───────────────────────────────────────────────────────────────────
 export const CreateReviewSchema = z.object({
   quiz: MongoId,
   user: MongoId,
@@ -118,7 +139,7 @@ export const CreateReviewSchema = z.object({
   rating: Rating,
 })
 
-// ─── User ────────────────────────────────────────────────────────────────────
+// ─── User ─────────────────────────────────────────────────────────────────────
 export const CreateUserSchema = z.object({
   email: z.string().email({ message: 'Invalid email' }),
   username: z.string().min(3).max(30).trim().optional(),
@@ -141,7 +162,7 @@ export const UserUpdateSchema = CreateUserSchema.partial().extend({
   lifetimeTotalScore: z.number().int().nonnegative().optional(), // admin/read-only
 })
 
-// ─── Password Reset ──────────────────────────────────────────────────────────
+// ─── Password Reset ───────────────────────────────────────────────────────────
 /**
  * Request password reset (send email)
  */
@@ -171,7 +192,7 @@ export const ResetPasswordSchema = z
     path: ['confirmPassword'],
   })
 
-// ─── Quiz Attempt / Submission ──────────────────────────────────────────────
+// ─── Quiz Attempt / Submission ───────────────────────────────────────────────
 export const SubmitQuizAttemptSchema = z.object({
   quizId: MongoId,
   answers: z
@@ -190,6 +211,7 @@ export const SubmitQuizAttemptSchema = z.object({
     ),
   timeTakenMs: z.number().min(0).optional(),
 })
+
 export const SubmitQuizAttemptWithKeySchema = SubmitQuizAttemptSchema.extend({
   attemptKey: z
     .string()
@@ -197,7 +219,7 @@ export const SubmitQuizAttemptWithKeySchema = SubmitQuizAttemptSchema.extend({
     .max(128, 'attemptKey too long'),
 })
 
-// ─── Leaderboard ─────────────────────────────────────────────────────────────
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
 /**
  * Single leaderboard entry (response shape)
  */

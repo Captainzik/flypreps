@@ -1,51 +1,72 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import GoogleSignInButton from '@/components/auth/google-signin-button'
+import BackHomeButton from '@/components/auth/back-home-button'
+import { Button } from '@/components/ui/button'
+
+type SignUpForm = {
+  email: string
+  username: string
+  fullName: string
+  password: string
+}
 
 export default function SignUpPage() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<SignUpForm>({
     email: '',
     username: '',
     fullName: '',
     password: '',
   })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
 
-  async function handleSignup(e: React.SyntheticEvent<HTMLFormElement>) {
+  async function handleSignup(
+    e: React.SyntheticEvent<HTMLFormElement>,
+  ): Promise<void> {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    const data = await res.json()
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
 
-    if (!res.ok) {
-      setError(data?.message || 'Signup failed')
+      const data: { message?: string } = await res.json()
+
+      if (!res.ok) {
+        setError(data?.message || 'Signup failed')
+        setLoading(false)
+        return
+      }
+
+      await signIn('credentials', {
+        email: form.email,
+        password: form.password,
+        callbackUrl: '/',
+      })
+    } catch {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
-      return
     }
-
-    await signIn('credentials', {
-      email: form.email,
-      password: form.password,
-      callbackUrl: '/',
-    })
   }
 
   return (
-    <main className='mx-auto max-w-md p-6'>
-      <h1 className='mb-4 text-2xl font-bold'>Create account</h1>
+    <main className='mx-auto w-full max-w-md px-4 py-8 sm:py-10'>
+      <h1 className='mb-5 text-2xl font-bold'>Create account</h1>
+
       <form onSubmit={handleSignup} className='space-y-3'>
         <input
           className='w-full rounded border p-2'
           placeholder='Email'
           type='email'
+          autoComplete='email'
           required
           value={form.email}
           onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
@@ -53,12 +74,14 @@ export default function SignUpPage() {
         <input
           className='w-full rounded border p-2'
           placeholder='Username'
+          autoComplete='username'
           value={form.username}
           onChange={(e) => setForm((s) => ({ ...s, username: e.target.value }))}
         />
         <input
           className='w-full rounded border p-2'
           placeholder='Full Name'
+          autoComplete='name'
           value={form.fullName}
           onChange={(e) => setForm((s) => ({ ...s, fullName: e.target.value }))}
         />
@@ -66,18 +89,39 @@ export default function SignUpPage() {
           className='w-full rounded border p-2'
           placeholder='Password'
           type='password'
+          autoComplete='new-password'
           required
           value={form.password}
           onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
         />
+
         {error ? <p className='text-sm text-red-600'>{error}</p> : null}
-        <button
-          className='w-full rounded bg-black p-2 text-white'
-          disabled={loading}
-        >
+
+        <Button type='submit' className='w-full' disabled={loading}>
           {loading ? 'Creating...' : 'Create account'}
-        </button>
+        </Button>
       </form>
+
+      <div className='my-5 flex items-center gap-3'>
+        <div className='h-px flex-1 bg-border' />
+        <span className='text-xs text-muted-foreground'>OR</span>
+        <div className='h-px flex-1 bg-border' />
+      </div>
+
+      <GoogleSignInButton />
+
+      <div className='mt-4'>
+        <BackHomeButton />
+      </div>
+
+      <div className='mt-6 rounded-lg border p-4 text-center'>
+        <p className='text-sm text-muted-foreground'>
+          Already have an account?
+        </p>
+        <Button asChild className='mt-3 w-full' type='button' variant='outline'>
+          <Link href='/signin'>Sign in</Link>
+        </Button>
+      </div>
     </main>
   )
 }
