@@ -88,7 +88,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         {
           $setOnInsert: {
             role: 'user',
-            // ✅ Google OAuth-created users are considered verified
             isVerified: true,
             favoriteCategories: [],
             lifetimeTotalScore: 0,
@@ -107,7 +106,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/signin',
     error: '/auth/error',
   },
 

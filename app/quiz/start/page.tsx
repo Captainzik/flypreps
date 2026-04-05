@@ -1,7 +1,15 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { auth } from '@/auth'
 import { getStartableQuizzes } from '@/lib/actions/quiz.actions'
 
 export default async function QuizStartPage() {
+  const session = await auth()
+
+  if (!session?.user?.id) {
+    redirect('/signin?callbackUrl=/quiz/start')
+  }
+
   const quizzes = await getStartableQuizzes()
 
   return (

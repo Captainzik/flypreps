@@ -2,7 +2,6 @@ import { APP_NAME } from '@/lib/constants'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MenuIcon } from 'lucide-react'
-import data from '@/lib/data'
 import Search from './search'
 import Menu from './menu'
 
@@ -55,17 +54,7 @@ export default function Header() {
           <nav
             aria-label='Primary'
             className='no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto whitespace-nowrap'
-          >
-            {data.headerMenus.map((menu) => (
-              <Link
-                href={menu.href}
-                key={menu.href}
-                className='header-button rounded-md px-2 py-1.5 text-sm'
-              >
-                {menu.name}
-              </Link>
-            ))}
-          </nav>
+          ></nav>
         </div>
       </div>
     </header>

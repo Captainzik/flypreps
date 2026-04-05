@@ -18,9 +18,6 @@ const isMongoDuplicateKeyError = (err: unknown): err is { code: number } => {
   )
 }
 
-/**
- * Create a new in-progress attempt for a quiz.
- */
 export async function startQuizAttempt(input: {
   quizId: string
   userId: string
@@ -67,9 +64,6 @@ export async function startQuizAttempt(input: {
   return attempt
 }
 
-/**
- * Fetch active (in-progress) attempt with quiz and question details.
- */
 export async function getActiveQuizAttempt(params: {
   attemptId: string
   userId: string
@@ -131,9 +125,6 @@ export async function getActiveQuizAttempt(params: {
   }
 }
 
-/**
- * Save one answer into an active attempt.
- */
 export async function submitAnswerToAttempt(input: {
   attemptId: string
   userId: string
@@ -182,10 +173,6 @@ export async function submitAnswerToAttempt(input: {
   }
 }
 
-/**
- * Existing flow: submit + grade + complete in one call.
- * (Kept intact, with your current imports/logic.)
- */
 export async function submitQuizAttempt(
   userId: string,
   rawPayload: ISubmitQuizAttemptInput,
@@ -437,9 +424,6 @@ type CompleteQuizAttemptResult = {
   idempotentReplay: boolean
 }
 
-/**
- * New lifecycle action: complete an existing in-progress attempt.
- */
 export async function completeQuizAttempt(
   input: CompleteQuizAttemptInput,
 ): Promise<CompleteQuizAttemptResult> {
@@ -613,9 +597,6 @@ export async function completeQuizAttempt(
   }
 }
 
-/**
- * Result payload for result page.
- */
 export async function getQuizAttemptResult(params: {
   attemptId: string
   userId: string
@@ -680,4 +661,62 @@ export async function getQuizAttemptResult(params: {
     completedAt: attempt.completedAt,
     answers,
   }
+}
+
+export type QuizHistoryItem = {
+  id: string
+  quizId: string
+  quizName: string
+  category: string
+  score: number
+  maxScore: number
+  percentage: number
+  completed: boolean
+  startedAt: Date
+  completedAt?: Date
+  questionsAnswered: number
+  totalQuestions: number
+}
+
+export async function getUserQuizHistory(params: {
+  userId: string
+  limit?: number
+}): Promise<QuizHistoryItem[]> {
+  const limit = Math.min(Math.max(params.limit ?? 50, 1), 200)
+
+  const attempts = await QuizAttempt.find({ user: params.userId })
+    .sort({ startedAt: -1, _id: -1 })
+    .limit(limit)
+    .populate({
+      path: 'quiz',
+      select: 'name category',
+    })
+    .lean()
+
+  return attempts.map((attempt) => {
+    const quizObj = attempt.quiz as unknown as
+      | {
+          _id?: mongoose.Types.ObjectId
+          name?: string
+          category?: string
+        }
+      | undefined
+
+    return {
+      id: attempt._id.toString(),
+      quizId: quizObj?._id?.toString?.() ?? '',
+      quizName: quizObj?.name ?? 'Quiz',
+      category: attempt.category || quizObj?.category || '',
+      score: attempt.score ?? 0,
+      maxScore: attempt.maxScore ?? 0,
+      percentage: attempt.percentage ?? 0,
+      completed: Boolean(attempt.completed),
+      startedAt: attempt.startedAt,
+      completedAt: attempt.completedAt,
+      questionsAnswered: attempt.questionsAnswered ?? 0,
+      totalQuestions: Array.isArray(attempt.answers)
+        ? attempt.answers.length
+        : 0,
+    }
+  })
 }

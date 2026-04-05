@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { notFound } from 'next/navigation'
+import { Types } from 'mongoose'
 import { connectToDatabase } from '@/lib/db'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
@@ -31,9 +31,9 @@ type LeanQuiz = {
 export default async function QuizDetailsPage({ params }: PageProps) {
   const { quizId } = await params
 
-  const session = await auth()
-  if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/${quizId}`)
+  // Prevent CastError for non-ObjectId values like "history"
+  if (!Types.ObjectId.isValid(quizId)) {
+    notFound()
   }
 
   await connectToDatabase()
