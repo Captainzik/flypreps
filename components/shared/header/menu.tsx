@@ -29,7 +29,6 @@ function LoggedOutMenu() {
       >
         Sign in
       </Link>
-
       <Link
         href='/quiz'
         className='header-button flex items-center gap-1 rounded-md px-2 py-1.5 text-sm sm:px-3'
@@ -37,7 +36,12 @@ function LoggedOutMenu() {
         <BookOpenCheck className='h-4 w-4 sm:h-5 sm:w-5' />
         <span>Quiz</span>
       </Link>
-
+      <Link
+        href='/feed'
+        className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
+      >
+        Feed
+      </Link>
       <Link
         href='/blog'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
@@ -58,42 +62,36 @@ function LoggedInMenu() {
         <BookOpenCheck className='h-4 w-4 sm:h-5 sm:w-5' />
         <span>Quiz</span>
       </Link>
-
       <Link
         href='/quiz/history'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Stats
       </Link>
-
       <Link
         href='/leaderboard'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Leaderboard
       </Link>
-
       <Link
         href='/subscription'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Subscription
       </Link>
-
       <Link
         href='/feed'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Feed
       </Link>
-
       <Link
         href='/profile'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Profile
       </Link>
-
       <LogoutButton />
     </>
   )
@@ -105,8 +103,8 @@ export default async function Menu() {
 
   return (
     <nav
-      aria-label='User quick actions'
-      className='ml-auto flex shrink-0 items-center gap-1 sm:gap-2'
+      aria-label='Primary navigation'
+      className='ml-auto flex shrink-0 flex-wrap items-center gap-1 sm:gap-2'
     >
       {isLoggedIn ? <LoggedInMenu /> : <LoggedOutMenu />}
     </nav>

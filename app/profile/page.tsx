@@ -1,18 +1,11 @@
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { connectToDatabase } from '@/lib/db'
 import { User } from '@/lib/db/models/user.model'
 import { Leaderboard } from '@/lib/db/models/leaderboard.model'
 import { getCurrentWeekPeriod } from '@/lib/utils'
+import { pageBootstrap } from '@/lib/page-conventions'
 
 export default async function ProfilePage() {
-  const session = await auth()
-  if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/profile')
-  }
-
-  await connectToDatabase()
+  const session = await pageBootstrap('/profile')
 
   const [user, weeklyEntry] = await Promise.all([
     User.findById(session.user.id)
@@ -74,7 +67,7 @@ export default async function ProfilePage() {
           Account settings
         </h2>
         <p className='mt-1 text-sm text-slate-600'>
-          Manage profile details, password, data reset, and account deletion.
+          Manage profile details, password, reset data, and account deletion.
         </p>
         <Link
           href='/profile/update'

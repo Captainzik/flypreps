@@ -1,0 +1,300 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { signOut } from 'next-auth/react'
+import { toast } from 'sonner'
+import {
+  updateProfile,
+  changePassword,
+  resetUserData,
+  deleteUserAccount,
+} from '@/lib/actions/user.actions'
+import MediaUploader, {
+  UploadedMediaResult,
+} from '@/components/profile/media-uploader'
+
+type Props = {
+  userId: string
+  initialEmail: string
+  initialUsername: string
+  initialFullName: string
+  initialAvatar: string
+}
+
+export default function UpdateProfileClient({
+  userId,
+  initialEmail,
+  initialUsername,
+  initialFullName,
+  initialAvatar,
+}: Props) {
+  const [profile, setProfile] = useState({
+    email: initialEmail,
+    username: initialUsername,
+    fullName: initialFullName,
+    avatar: initialAvatar,
+  })
+
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  })
+
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  const canDelete = deleteConfirmText === 'DELETE'
+
+  function handleUploadedMedia(result: UploadedMediaResult) {
+    if (result.kind !== 'image') {
+      toast.info('Video uploaded. Profile avatar is usually an image.')
+    }
+    setProfile((prev) => ({ ...prev, avatar: result.url }))
+  }
+
+  return (
+    <main className='space-y-6'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+        <h1 className='text-2xl font-bold text-slate-900'>Update Profile</h1>
+        <p className='mt-1 text-sm text-slate-600'>
+          Update account details and security options.
+        </p>
+      </section>
+
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+        <h2 className='text-lg font-semibold text-slate-900'>Profile info</h2>
+
+        <form
+          className='mt-4 space-y-3'
+          onSubmit={(e) => {
+            e.preventDefault()
+
+            startTransition(async () => {
+              try {
+                await updateProfile({
+                  userId,
+                  email: profile.email,
+                  username: profile.username,
+                  fullName: profile.fullName,
+                  avatar: profile.avatar,
+                })
+                toast.success('Profile updated successfully')
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to update profile',
+                )
+              }
+            })
+          }}
+        >
+          <input
+            className='w-full rounded border p-2'
+            type='email'
+            placeholder='Email'
+            value={profile.email}
+            onChange={(e) =>
+              setProfile((s) => ({ ...s, email: e.target.value }))
+            }
+            required
+            disabled={isPending}
+          />
+
+          <input
+            className='w-full rounded border p-2'
+            placeholder='Username'
+            value={profile.username}
+            onChange={(e) =>
+              setProfile((s) => ({ ...s, username: e.target.value }))
+            }
+            disabled={isPending}
+          />
+
+          <input
+            className='w-full rounded border p-2'
+            placeholder='Full name'
+            value={profile.fullName}
+            onChange={(e) =>
+              setProfile((s) => ({ ...s, fullName: e.target.value }))
+            }
+            disabled={isPending}
+          />
+
+          <input
+            className='w-full rounded border p-2'
+            placeholder='Avatar URL'
+            value={profile.avatar}
+            onChange={(e) =>
+              setProfile((s) => ({ ...s, avatar: e.target.value }))
+            }
+            disabled={isPending}
+          />
+
+          <MediaUploader
+            value={profile.avatar}
+            disabled={isPending}
+            label='Upload profile media'
+            onUploaded={handleUploadedMedia}
+          />
+
+          <button
+            type='submit'
+            className='rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60'
+            disabled={isPending}
+          >
+            Save profile
+          </button>
+        </form>
+      </section>
+
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+        <h2 className='text-lg font-semibold text-slate-900'>Reset password</h2>
+
+        <form
+          className='mt-4 space-y-3'
+          onSubmit={(e) => {
+            e.preventDefault()
+
+            startTransition(async () => {
+              try {
+                await changePassword({
+                  userId,
+                  oldPassword: passwordForm.oldPassword,
+                  newPassword: passwordForm.newPassword,
+                  confirmNewPassword: passwordForm.confirmNewPassword,
+                })
+
+                setPasswordForm({
+                  oldPassword: '',
+                  newPassword: '',
+                  confirmNewPassword: '',
+                })
+
+                toast.success('Password updated successfully')
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to update password',
+                )
+              }
+            })
+          }}
+        >
+          <input
+            className='w-full rounded border p-2'
+            type='password'
+            placeholder='Old password'
+            value={passwordForm.oldPassword}
+            onChange={(e) =>
+              setPasswordForm((s) => ({ ...s, oldPassword: e.target.value }))
+            }
+            required
+            disabled={isPending}
+          />
+          <input
+            className='w-full rounded border p-2'
+            type='password'
+            placeholder='New password'
+            value={passwordForm.newPassword}
+            onChange={(e) =>
+              setPasswordForm((s) => ({ ...s, newPassword: e.target.value }))
+            }
+            required
+            disabled={isPending}
+          />
+          <input
+            className='w-full rounded border p-2'
+            type='password'
+            placeholder='Confirm new password'
+            value={passwordForm.confirmNewPassword}
+            onChange={(e) =>
+              setPasswordForm((s) => ({
+                ...s,
+                confirmNewPassword: e.target.value,
+              }))
+            }
+            required
+            disabled={isPending}
+          />
+
+          <button
+            type='submit'
+            className='rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60'
+            disabled={isPending}
+          >
+            Update password
+          </button>
+        </form>
+      </section>
+
+      <section className='rounded-xl border border-red-200 bg-white p-6 shadow-sm'>
+        <h2 className='text-lg font-semibold text-red-700'>Danger zone</h2>
+
+        <div className='mt-4 space-y-4'>
+          <button
+            type='button'
+            className='rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60'
+            disabled={isPending}
+            onClick={() => {
+              startTransition(async () => {
+                try {
+                  await resetUserData(userId)
+                  toast.success('Data reset completed')
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : 'Failed to reset data',
+                  )
+                }
+              })
+            }}
+          >
+            Reset data
+          </button>
+
+          <div className='rounded-md border border-red-300 p-3'>
+            <p className='text-sm text-red-700 font-medium'>
+              Type <span className='font-bold'>DELETE</span> to confirm
+              permanent account deletion.
+            </p>
+
+            <input
+              className='mt-3 w-full rounded border p-2'
+              placeholder='Type DELETE'
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              disabled={isPending}
+            />
+
+            <button
+              type='button'
+              className='mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
+              disabled={isPending || !canDelete}
+              onClick={() => {
+                startTransition(async () => {
+                  try {
+                    await deleteUserAccount(userId)
+                    toast.success('Account deleted')
+                    await signOut({ callbackUrl: '/' })
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : 'Failed to delete account',
+                    )
+                  }
+                })
+              }}
+            >
+              Delete account permanently
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
