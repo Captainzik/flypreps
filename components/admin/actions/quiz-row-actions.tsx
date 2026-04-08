@@ -16,10 +16,11 @@ export default function QuizRowActions({ quizId, initialPublished }: Props) {
   async function togglePublish() {
     try {
       setLoading('toggle')
-      const res = await fetch('/api/admin/quizzes/publish', {
-        method: 'POST',
+
+      const res = await fetch(`/api/admin/quizzes/${quizId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizId, isPublished: !isPublished }),
+        body: JSON.stringify({ isPublished: !isPublished }),
       })
 
       const json = (await res.json()) as { success?: boolean; message?: string }

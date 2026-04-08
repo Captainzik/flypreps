@@ -1,20 +1,11 @@
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/guards'
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect('/auth/signin?callbackUrl=/admin')
-  }
-
-  if (session.user.role !== 'admin') {
-    redirect('/403')
-  }
+  const session = await requireAdmin()
 
   return (
     <div className='min-h-screen bg-slate-50'>

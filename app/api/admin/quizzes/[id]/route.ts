@@ -54,6 +54,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     if (payload.category !== undefined) update.category = payload.category
     if (payload.tags !== undefined) update.tags = payload.tags
     if (payload.questions !== undefined) update.questions = payload.questions
+    if (payload.isPublished !== undefined)
+      update.isPublished = payload.isPublished
 
     if (Object.keys(update).length === 0) {
       return NextResponse.json(

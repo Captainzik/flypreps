@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import { Types } from 'mongoose'
 import { User } from '@/lib/db/models/user.model'
 import UserRoleForm from '@/components/admin/actions/user-role-form'
+import UserRowActions from '@/components/admin/actions/user-row-actions'
 
 type UserRole = 'user' | 'admin' | 'moderator'
 
@@ -20,8 +22,14 @@ export default async function AdminUsersPage() {
 
   return (
     <main className='space-y-4'>
-      <div className='rounded-xl border bg-white p-4 shadow-sm'>
+      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
         <h1 className='text-xl font-semibold'>Manage Users</h1>
+        <Link
+          href='/admin/users/new'
+          className='rounded-lg bg-slate-900 px-4 py-2 text-sm text-white'
+        >
+          + New User
+        </Link>
       </div>
 
       <div className='overflow-hidden rounded-xl border bg-white shadow-sm'>
@@ -32,7 +40,8 @@ export default async function AdminUsersPage() {
               <th className='p-3'>Username</th>
               <th className='p-3'>Role</th>
               <th className='p-3'>Verified</th>
-              <th className='p-3'>Actions</th>
+              <th className='p-3'>Role Action</th>
+              <th className='p-3'>CRUD Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -47,6 +56,9 @@ export default async function AdminUsersPage() {
                     userId={u._id.toString()}
                     initialRole={u.role}
                   />
+                </td>
+                <td className='p-3'>
+                  <UserRowActions userId={u._id.toString()} />
                 </td>
               </tr>
             ))}
