@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { Types } from 'mongoose'
-import { connectToDatabase } from '@/lib/db'
+import { auth } from '@/auth'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
+import MediaPreview from '@/components/shared/media-preview'
 
 type PageProps = {
   params: Promise<{
@@ -11,106 +12,119 @@ type PageProps = {
   }>
 }
 
-type LeanQuestion = {
-  _id: { toString(): string }
-  question: string
-  options: { text: string; isCorrect?: boolean }[]
-  image?: string | null
-  tips?: string
-}
+type QuizTag = 'Radiography' | 'Sonography'
+type QuizCategory = 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CPD'
 
-type LeanQuiz = {
-  _id: { toString(): string }
+type QuizDetails = {
+  _id: Types.ObjectId
   name: string
   description: string
-  category: 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CPD'
+  image?: string
+  category: QuizCategory
+  tags: QuizTag[]
   isPublished?: boolean
-  questions: Array<{ toString(): string }>
+  questions: Types.ObjectId[]
 }
+
+const MEDIA_BOX =
+  'relative mt-4 h-64 w-full max-w-3xl overflow-hidden rounded-xl border border-slate-200'
 
 export default async function QuizDetailsPage({ params }: PageProps) {
   const { quizId } = await params
 
-  // Prevent CastError for non-ObjectId values like "history"
-  if (!Types.ObjectId.isValid(quizId)) {
-    notFound()
+  const session = await auth()
+  if (!session?.user?.id) {
+    redirect(`/signin?callbackUrl=/quiz/${quizId}`)
   }
-
-  await connectToDatabase()
 
   const quiz = (await Quiz.findById(quizId)
-    .select('_id name description category isPublished questions')
-    .lean()) as LeanQuiz | null
+    .select('name description image category tags questions isPublished')
+    .lean()) as QuizDetails | null
 
-  if (!quiz || quiz.isPublished !== true) {
-    notFound()
-  }
+  if (!quiz) notFound()
+  if (!quiz.isPublished) notFound()
 
-  const questionIds = Array.isArray(quiz.questions)
-    ? quiz.questions.map((id) => id.toString())
-    : []
+  const questionIds = Array.isArray(quiz.questions) ? quiz.questions : []
+  const questionCount = questionIds.length
 
-  if (questionIds.length === 0) {
-    notFound()
-  }
+  const publishedQuestionCount = await Question.countDocuments({
+    _id: { $in: questionIds },
+    isPublished: true,
+  })
 
-  const questions = (await Question.find({ _id: { $in: questionIds } })
-    .select('_id question options image tips')
-    .lean()) as LeanQuestion[]
-
-  if (questions.length === 0) {
-    notFound()
-  }
+  const canStart = questionCount > 0 && publishedQuestionCount > 0
 
   return (
     <main className='space-y-6'>
       <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>{quiz.name}</h1>
-        <p className='mt-1 text-sm text-slate-600'>{quiz.description}</p>
-        <div className='mt-3 flex items-center gap-2'>
-          <span className='rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700'>
-            {quiz.category}
-          </span>
-          <span className='text-xs text-slate-500'>
-            {questions.length} question{questions.length === 1 ? '' : 's'}
-          </span>
-        </div>
-      </section>
+        <div className='flex flex-wrap items-start justify-between gap-3'>
+          <div>
+            <h1 className='text-2xl font-bold text-slate-900'>{quiz.name}</h1>
+            <p className='mt-1 text-sm text-slate-600'>{quiz.category}</p>
+          </div>
 
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h2 className='text-lg font-semibold text-slate-900'>
-          Ready to begin?
-        </h2>
-        <p className='mt-1 text-sm text-slate-600'>
-          This attempt will include all available questions for this quiz.
+          <div className='flex flex-wrap gap-2'>
+            {quiz.tags?.map((tag) => (
+              <span
+                key={tag}
+                className='rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700'
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {quiz.image?.trim() ? (
+          <div className={MEDIA_BOX}>
+            <MediaPreview url={quiz.image} alt={`${quiz.name} media`} />
+          </div>
+        ) : null}
+
+        <p className='mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700'>
+          {quiz.description}
         </p>
 
-        <div className='mt-4 flex flex-wrap gap-3'>
-          <Link
-            href={`/quiz/${quiz._id.toString()}/attempt`}
-            className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
-          >
-            Start now
-          </Link>
+        <div className='mt-5 grid gap-3 sm:grid-cols-2'>
+          <div className='rounded-lg bg-slate-50 p-4'>
+            <p className='text-xs text-slate-500'>Total questions</p>
+            <p className='text-lg font-semibold text-slate-900'>
+              {questionCount}
+            </p>
+          </div>
+          <div className='rounded-lg bg-slate-50 p-4'>
+            <p className='text-xs text-slate-500'>Published questions</p>
+            <p className='text-lg font-semibold text-slate-900'>
+              {publishedQuestionCount}
+            </p>
+          </div>
+        </div>
+
+        <div className='mt-6 flex flex-wrap gap-3'>
+          {canStart ? (
+            <Link
+              href={`/quiz/${quiz._id.toString()}/start`}
+              className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
+            >
+              Start quiz
+            </Link>
+          ) : (
+            <button
+              type='button'
+              disabled
+              className='inline-flex items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white'
+            >
+              Quiz unavailable
+            </button>
+          )}
 
           <Link
             href='/quiz/start'
             className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50'
           >
-            Back to quiz list
+            Back to quizzes
           </Link>
         </div>
-      </section>
-
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h3 className='text-base font-semibold text-slate-900'>
-          Question preview
-        </h3>
-        <ol className='mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700'>
-          {questions.map((q) => (
-            <li key={q._id.toString()}>{q.question}</li>
-          ))}
-        </ol>
       </section>
     </main>
   )

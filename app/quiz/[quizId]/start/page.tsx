@@ -1,0 +1,42 @@
+import { notFound, redirect } from 'next/navigation'
+import { auth } from '@/auth'
+import { Quiz } from '@/lib/db/models/quiz.model'
+import { startQuizAttempt } from '@/lib/actions/quizAttempt.actions'
+
+type PageProps = {
+  params: Promise<{
+    quizId: string
+  }>
+}
+
+type QuizStartRow = {
+  _id: { toString(): string }
+  isPublished?: boolean
+}
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export default async function QuizStartPage({ params }: PageProps) {
+  const { quizId } = await params
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    redirect(`/signin?callbackUrl=/quiz/${quizId}/start`)
+  }
+
+  const quiz = (await Quiz.findById(quizId)
+    .select('_id isPublished')
+    .lean()) as QuizStartRow | null
+
+  if (!quiz || !quiz.isPublished) {
+    notFound()
+  }
+
+  const attempt = await startQuizAttempt({
+    quizId: quiz._id.toString(),
+    userId: session.user.id,
+  })
+
+  redirect(`/quiz/attempt/${attempt._id.toString()}`)
+}

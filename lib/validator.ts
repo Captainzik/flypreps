@@ -21,11 +21,19 @@ const CategoryEnum = z.enum([
   'CPD',
 ])
 
-export const CreateOptionSchema = z.object({
-  text: z.string().min(1, 'Option text is required').max(300).trim(),
-  image: UrlOptional,
-  isCorrect: z.boolean(),
-})
+const CreateOptionSchema = z
+  .object({
+    text: z.string().max(300).trim().optional().default(''),
+    image: UrlOptional,
+    isCorrect: z.boolean(),
+  })
+  .refine(
+    (opt) => opt.text.trim().length > 0 || (opt.image ?? '').trim().length > 0,
+    {
+      message: 'Each option must have text or image',
+      path: ['text'],
+    },
+  )
 
 const CreateQuestionBaseSchema = z.object({
   question: z.string().min(10, 'Question too short').max(600).trim(),
@@ -38,11 +46,17 @@ const CreateQuestionBaseSchema = z.object({
     .min(2, 'At least 2 options required')
     .max(4, 'Max 4 options allowed')
     .refine(
-      (opts) =>
-        new Set(opts.map((o) => o.text.trim().toLowerCase())).size ===
-        opts.length,
+      (opts) => {
+        const normalized = opts.map((o) => {
+          const t = (o.text ?? '').trim().toLowerCase()
+          const i = (o.image ?? '').trim().toLowerCase()
+          return `${t}|${i}`
+        })
+        return new Set(normalized).size === normalized.length
+      },
       {
-        message: 'Option texts must be unique (case-insensitive)',
+        message:
+          'Option combinations must be unique (case-insensitive text+image)',
         path: ['options'],
       },
     ),

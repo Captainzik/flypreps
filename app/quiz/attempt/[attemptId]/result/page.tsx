@@ -2,9 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getQuizAttemptResult } from '@/lib/actions/quizAttempt.actions'
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import MediaPreview from '@/components/shared/media-preview'
 
 type PageProps = {
   params: Promise<{
@@ -15,12 +13,13 @@ type PageProps = {
 type ResultAnswer = {
   questionId: string
   questionText: string
+  questionImage?: string
   selectedOptionIndex?: number
   correctOptionIndex: number
   isCorrect: boolean
   pointsEarned: number
   tips?: string
-  options: { text: string }[]
+  options: { text?: string; image?: string }[]
 }
 
 type QuizAttemptResult = {
@@ -29,12 +28,35 @@ type QuizAttemptResult = {
     id: string
     name: string
     category: string
+    image?: string
   }
   score: number
   maxScore: number
   percentage: number
   completedAt?: Date | string
   answers: ResultAnswer[]
+}
+
+const MEDIA_BOX =
+  'relative mt-3 h-48 w-96 overflow-hidden rounded-lg border border-slate-200'
+
+function renderOption(
+  option?: { text?: string; image?: string },
+  alt = 'Option',
+) {
+  if (!option) return <span>N/A</span>
+
+  return (
+    <div className='space-y-2'>
+      {option.text?.trim() ? <p>{option.text}</p> : null}
+      {option.image?.trim() ? (
+        <div className={MEDIA_BOX}>
+          <MediaPreview url={option.image} alt={alt} />
+        </div>
+      ) : null}
+      {!option.text?.trim() && !option.image?.trim() ? <span>N/A</span> : null}
+    </div>
+  )
 }
 
 export default async function QuizAttemptResultPage({ params }: PageProps) {
@@ -46,6 +68,7 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
   }
 
   let result: QuizAttemptResult
+
   try {
     result = (await getQuizAttemptResult({
       attemptId,
@@ -63,6 +86,12 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
       <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
         <h1 className='text-2xl font-bold text-slate-900'>Quiz Result</h1>
         <p className='mt-1 text-sm text-slate-600'>{result.quiz.name}</p>
+
+        {result.quiz.image?.trim() ? (
+          <div className={MEDIA_BOX}>
+            <MediaPreview url={result.quiz.image} alt='Quiz media' />
+          </div>
+        ) : null}
 
         <div className='mt-4 grid gap-3 sm:grid-cols-3'>
           <div className='rounded-lg bg-slate-50 p-4'>
@@ -103,15 +132,15 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
 
       <section className='space-y-3'>
         {result.answers.map((ans, index) => {
-          const userChoice =
+          const userOption =
             typeof ans.selectedOptionIndex === 'number'
-              ? (ans.options[ans.selectedOptionIndex]?.text ?? 'No answer')
-              : 'No answer'
+              ? ans.options[ans.selectedOptionIndex]
+              : undefined
 
-          const correctChoice =
+          const correctOption =
             ans.correctOptionIndex >= 0
-              ? (ans.options[ans.correctOptionIndex]?.text ?? 'N/A')
-              : 'N/A'
+              ? ans.options[ans.correctOptionIndex]
+              : undefined
 
           return (
             <article
@@ -133,13 +162,28 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
                 </span>
               </div>
 
-              <p className='text-sm text-slate-700'>
-                <span className='font-medium'>Your answer:</span> {userChoice}
-              </p>
-              <p className='mt-1 text-sm text-slate-700'>
-                <span className='font-medium'>Correct answer:</span>{' '}
-                {correctChoice}
-              </p>
+              {ans.questionImage?.trim() ? (
+                <div className={MEDIA_BOX}>
+                  <MediaPreview
+                    url={ans.questionImage}
+                    alt={`Question ${index + 1} media`}
+                  />
+                </div>
+              ) : null}
+
+              <div className='mt-2 text-sm text-slate-700'>
+                <span className='font-medium'>Your answer:</span>
+                <div className='mt-1'>
+                  {renderOption(userOption, 'Your selected option media')}
+                </div>
+              </div>
+
+              <div className='mt-2 text-sm text-slate-700'>
+                <span className='font-medium'>Correct answer:</span>
+                <div className='mt-1'>
+                  {renderOption(correctOption, 'Correct option media')}
+                </div>
+              </div>
 
               {ans.tips ? (
                 <p className='mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800'>

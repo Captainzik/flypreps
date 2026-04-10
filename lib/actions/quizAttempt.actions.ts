@@ -47,7 +47,9 @@ export async function startQuizAttempt(input: {
     quiz: quiz._id,
     attemptKey:
       attemptKey ||
-      `attempt_${userId}_${quizId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+      `attempt_${userId}_${quizId}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`,
     startedAt: new Date(),
     completed: false,
     score: 0,
@@ -71,11 +73,11 @@ export async function getActiveQuizAttempt(params: {
   })
     .populate({
       path: 'quiz',
-      select: 'name category',
+      select: 'name category image',
     })
     .populate({
       path: 'answers.question',
-      select: 'question options',
+      select: 'question image options',
     })
     .lean()
 
@@ -85,19 +87,25 @@ export async function getActiveQuizAttempt(params: {
     _id: mongoose.Types.ObjectId
     name: string
     category: string
+    image?: string
   }
 
   const questions = (attempt.answers || []).map((a) => {
     const q = a.question as unknown as {
       _id: mongoose.Types.ObjectId
       question: string
-      options: Array<{ text: string; isCorrect?: boolean }>
+      image?: string
+      options: Array<{ text?: string; image?: string; isCorrect?: boolean }>
     }
 
     return {
       questionId: q?._id?.toString?.() ?? '',
       questionText: q?.question ?? '',
-      options: (q?.options || []).map((o) => ({ text: o.text })),
+      image: q?.image ?? '',
+      options: (q?.options || []).map((o) => ({
+        text: o?.text ?? '',
+        image: o?.image ?? '',
+      })),
       selectedOptionIndex: a.selectedOptionIndex,
     }
   })
@@ -108,6 +116,7 @@ export async function getActiveQuizAttempt(params: {
       id: quizObj?._id?.toString?.() ?? '',
       name: quizObj?.name ?? 'Quiz',
       category: quizObj?.category ?? '',
+      image: quizObj?.image ?? '',
     },
     questions,
     answers: (attempt.answers || []).map((a) => ({
@@ -592,11 +601,11 @@ export async function getQuizAttemptResult(params: {
   })
     .populate({
       path: 'quiz',
-      select: 'name category',
+      select: 'name category image',
     })
     .populate({
       path: 'answers.question',
-      select: 'question options tips',
+      select: 'question image options tips',
     })
     .lean()
 
@@ -606,13 +615,15 @@ export async function getQuizAttemptResult(params: {
     _id: mongoose.Types.ObjectId
     name: string
     category: string
+    image?: string
   }
 
   const answers = (attempt.answers || []).map((a) => {
     const q = a.question as unknown as {
       _id: mongoose.Types.ObjectId
       question: string
-      options: Array<{ text: string; isCorrect?: boolean }>
+      image?: string
+      options: Array<{ text?: string; image?: string; isCorrect?: boolean }>
       tips?: string
     }
 
@@ -623,12 +634,16 @@ export async function getQuizAttemptResult(params: {
     return {
       questionId: q?._id?.toString?.() ?? '',
       questionText: q?.question ?? '',
+      questionImage: q?.image ?? '',
       selectedOptionIndex: a.selectedOptionIndex,
       correctOptionIndex,
       isCorrect: a.isCorrect,
       pointsEarned: a.pointsEarned,
       tips: q?.tips ?? '',
-      options: (q?.options || []).map((o) => ({ text: o.text })),
+      options: (q?.options || []).map((o) => ({
+        text: o?.text ?? '',
+        image: o?.image ?? '',
+      })),
     }
   })
 
@@ -638,6 +653,7 @@ export async function getQuizAttemptResult(params: {
       id: quizObj?._id?.toString?.() ?? '',
       name: quizObj?.name ?? 'Quiz',
       category: quizObj?.category ?? '',
+      image: quizObj?.image ?? '',
     },
     score: attempt.score,
     maxScore: attempt.maxScore,

@@ -4,6 +4,7 @@ import {
   getActiveQuizAttempt,
   completeQuizAttempt,
 } from '@/lib/actions/quizAttempt.actions'
+import MediaPreview from '@/components/shared/media-preview'
 
 type PageProps = {
   params: Promise<{
@@ -12,12 +13,14 @@ type PageProps = {
 }
 
 type AttemptOption = {
-  text: string
+  text?: string
+  image?: string
 }
 
 type AttemptQuestion = {
   questionId: string
   questionText: string
+  image?: string
   options: AttemptOption[]
 }
 
@@ -26,6 +29,7 @@ type ActiveAttempt = {
   quiz: {
     name: string
     category: string
+    image?: string
   }
   answers: {
     questionId: string
@@ -34,8 +38,12 @@ type ActiveAttempt = {
   questions: AttemptQuestion[]
 }
 
+const MEDIA_BOX =
+  'relative mt-3 h-48 w-96 overflow-hidden rounded-lg border border-slate-200'
+
 export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const { attemptId } = await params
+
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -47,24 +55,27 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
     userId: session.user.id,
   })) as ActiveAttempt | null
 
-  if (!attempt) notFound()
+  if (!attempt) {
+    notFound()
+  }
 
   const answeredCount = attempt.answers.filter(
     (a) => typeof a.selectedOptionIndex === 'number',
   ).length
 
   if (answeredCount >= attempt.questions.length) {
-    // deterministic: ensure completion write finishes before redirect
     await completeQuizAttempt({
       attemptId,
       userId: session.user.id,
     })
-
     redirect(`/quiz/attempt/${attemptId}/result`)
   }
 
   const currentQuestion = attempt.questions[answeredCount]
-  if (!currentQuestion) notFound()
+
+  if (!currentQuestion) {
+    notFound()
+  }
 
   return (
     <main className='space-y-6'>
@@ -84,6 +95,12 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
         <h2 className='text-lg font-semibold text-slate-900'>
           {currentQuestion.questionText}
         </h2>
+
+        {currentQuestion.image?.trim() ? (
+          <div className={MEDIA_BOX}>
+            <MediaPreview url={currentQuestion.image} alt='Question media' />
+          </div>
+        ) : null}
 
         <form
           action={`/quiz/attempt/${attemptId}/answer`}
@@ -108,7 +125,22 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
                 required
                 className='mt-1'
               />
-              <span className='text-sm text-slate-800'>{opt.text}</span>
+              <div className='space-y-2'>
+                {opt.text?.trim() ? (
+                  <span className='block text-sm text-slate-800'>
+                    {opt.text}
+                  </span>
+                ) : null}
+
+                {opt.image?.trim() ? (
+                  <div className={MEDIA_BOX}>
+                    <MediaPreview
+                      url={opt.image}
+                      alt={`Option ${idx + 1} media`}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </label>
           ))}
 

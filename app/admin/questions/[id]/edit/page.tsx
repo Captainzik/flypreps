@@ -3,9 +3,11 @@
 import { FormEvent, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import MediaPreview from '@/components/shared/media-preview'
 
 type OptionRow = {
   text: string
+  image?: string
   isCorrect: boolean
 }
 
@@ -33,10 +35,10 @@ export default function EditQuestionPage() {
   const [tips, setTips] = useState('')
   const [isPublished, setIsPublished] = useState(false)
   const [options, setOptions] = useState<OptionRow[]>([
-    { text: '', isCorrect: true },
-    { text: '', isCorrect: false },
-    { text: '', isCorrect: false },
-    { text: '', isCorrect: false },
+    { text: '', image: '', isCorrect: true },
+    { text: '', image: '', isCorrect: false },
+    { text: '', image: '', isCorrect: false },
+    { text: '', image: '', isCorrect: false },
   ])
 
   useEffect(() => {
@@ -65,9 +67,13 @@ export default function EditQuestionPage() {
         setTips(json.data.tips ?? '')
         setIsPublished(Boolean(json.data.isPublished))
 
-        const normalized = [...json.data.options]
+        const normalized = [...json.data.options].map((o) => ({
+          text: o.text ?? '',
+          image: o.image ?? '',
+          isCorrect: o.isCorrect,
+        }))
         while (normalized.length < 4) {
-          normalized.push({ text: '', isCorrect: false })
+          normalized.push({ text: '', image: '', isCorrect: false })
         }
         setOptions(normalized.slice(0, 4))
       } catch (error) {
@@ -95,15 +101,25 @@ export default function EditQuestionPage() {
     setOptions((prev) => prev.map((o, i) => (i === index ? { ...o, text } : o)))
   }
 
+  function setOptionImage(index: number, imageUrl: string) {
+    setOptions((prev) =>
+      prev.map((o, i) => (i === index ? { ...o, image: imageUrl } : o)),
+    )
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const normalizedOptions = options
-      .map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }))
-      .filter((o) => o.text.length > 0)
+      .map((o) => ({
+        text: (o.text ?? '').trim(),
+        image: (o.image ?? '').trim(),
+        isCorrect: o.isCorrect,
+      }))
+      .filter((o) => o.text.length > 0 || o.image.length > 0)
 
     if (normalizedOptions.length < 2) {
-      alert('Provide at least 2 options.')
+      alert('Provide at least 2 options (text or image/video URL).')
       return
     }
 
@@ -196,31 +212,59 @@ export default function EditQuestionPage() {
         </div>
 
         <div className='space-y-2'>
-          <label className='text-sm font-medium'>Image URL (optional)</label>
+          <label className='text-sm font-medium'>
+            Question Image URL (optional)
+          </label>
           <input
             value={image}
             onChange={(e) => setImage(e.target.value)}
+            placeholder='https://...'
             className='w-full rounded border px-3 py-2'
           />
+          {image.trim() ? (
+            <div className='relative h-48 w-96 overflow-hidden rounded border'>
+              <MediaPreview url={image.trim()} alt='Question media preview' />
+            </div>
+          ) : null}
         </div>
 
         <div className='space-y-2'>
           <label className='text-sm font-medium'>Options</label>
-          <div className='space-y-2'>
+          <div className='space-y-3'>
             {options.map((opt, idx) => (
-              <div key={idx} className='flex items-center gap-2'>
-                <input
-                  type='radio'
-                  name='correct'
-                  checked={opt.isCorrect}
-                  onChange={() => setCorrect(idx)}
-                />
-                <input
-                  value={opt.text}
-                  onChange={(e) => setOptionText(idx, e.target.value)}
-                  placeholder={`Option ${idx + 1}`}
-                  className='w-full rounded border px-3 py-2'
-                />
+              <div key={idx} className='rounded border p-3'>
+                <div className='mb-2 flex items-center gap-2'>
+                  <input
+                    type='radio'
+                    name='correct'
+                    checked={opt.isCorrect}
+                    onChange={() => setCorrect(idx)}
+                  />
+                  <span className='text-sm font-medium'>Option {idx + 1}</span>
+                </div>
+
+                <div className='space-y-2'>
+                  <input
+                    value={opt.text}
+                    onChange={(e) => setOptionText(idx, e.target.value)}
+                    placeholder={`Option ${idx + 1} text (optional if media provided)`}
+                    className='w-full rounded border px-3 py-2'
+                  />
+                  <input
+                    value={opt.image ?? ''}
+                    onChange={(e) => setOptionImage(idx, e.target.value)}
+                    placeholder='Option image/video URL (optional)'
+                    className='w-full rounded border px-3 py-2'
+                  />
+                  {(opt.image ?? '').trim() ? (
+                    <div className='relative h-24 w-48 overflow-hidden rounded border'>
+                      <MediaPreview
+                        url={(opt.image ?? '').trim()}
+                        alt={`Option ${idx + 1} media preview`}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>
