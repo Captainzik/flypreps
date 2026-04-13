@@ -13,10 +13,9 @@ export interface IUser {
   lastActive?: Date
   createdAt?: Date
   updatedAt?: Date
-  // === NEW: Streak fields ===
-  currentStreak: number // current consecutive days
-  longestStreak: number // all-time best streak
-  lastStreakDate?: Date // date of the last day they contributed to streak
+  currentStreak: number
+  longestStreak: number
+  lastStreakDate?: Date
 }
 
 export type IUserDocument = HydratedDocument<IUser>
@@ -27,6 +26,7 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, 'Email is required'],
       unique: true,
+      index: true,
       trim: true,
       lowercase: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email'],
@@ -38,6 +38,7 @@ const UserSchema = new Schema<IUser>(
       maxlength: [30, 'Username too long'],
       unique: true,
       sparse: true,
+      index: true,
     },
     password: {
       type: String,
@@ -84,7 +85,6 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
-    // === NEW STREAK FIELDS ===
     currentStreak: {
       type: Number,
       default: 0,
@@ -112,16 +112,13 @@ const UserSchema = new Schema<IUser>(
   },
 )
 
-// Indexes
-UserSchema.index({ email: 1 }, { unique: true })
-UserSchema.index({ username: 1 }, { unique: true, sparse: true })
+// Keep non-duplicate indexes only.
+// NOTE: email + username indexes are already defined at field level above.
 UserSchema.index({ role: 1 })
 UserSchema.index({ lifetimeTotalScore: -1, role: 1 })
 UserSchema.index({ lastActive: -1 })
-// Add index for fast streak queries (optional but good)
 UserSchema.index({ currentStreak: -1 })
 
-// Virtuals
 UserSchema.virtual('reviewCount', {
   ref: 'Review',
   localField: '_id',
@@ -129,7 +126,6 @@ UserSchema.virtual('reviewCount', {
   count: true,
 })
 
-// Pre-save: update lastActive
 UserSchema.pre('save', function (this: IUserDocument) {
   this.lastActive = new Date()
 })
