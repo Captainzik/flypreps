@@ -38,5 +38,5 @@ export type IQuizWithReviewsSchema = z.infer<typeof CreateQuizSchema> & {
 export type ISubmitQuizAttemptInput = z.infer<
   typeof SubmitQuizAttemptWithKeySchema
 > & {
-  attemptKey: string // added by middleware
+  attemptKey: string
 }

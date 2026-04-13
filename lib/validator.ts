@@ -21,7 +21,7 @@ const CategoryEnum = z.enum([
   'CPD',
 ])
 
-const CreateOptionSchema = z
+export const CreateOptionSchema = z
   .object({
     text: z.string().max(300).trim().optional().default(''),
     image: UrlOptional,
