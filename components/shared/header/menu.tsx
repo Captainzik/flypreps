@@ -2,6 +2,13 @@ import { auth, signOut } from '@/auth'
 import Link from 'next/link'
 import { BookOpenCheck } from 'lucide-react'
 
+type AppSession = {
+  user?: {
+    id?: string | null
+    role?: string | null
+  } | null
+} | null
+
 async function LogoutButton() {
   return (
     <form
@@ -52,7 +59,7 @@ function LoggedOutMenu() {
   )
 }
 
-function LoggedInMenu() {
+function LoggedInMenu({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       <Link
@@ -92,21 +99,30 @@ function LoggedInMenu() {
       >
         Profile
       </Link>
+      {isAdmin ? (
+        <Link
+          href='/admin'
+          className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
+        >
+          Admin
+        </Link>
+      ) : null}
       <LogoutButton />
     </>
   )
 }
 
 export default async function Menu() {
-  const session = await auth()
+  const session = (await auth()) as AppSession
   const isLoggedIn = Boolean(session?.user?.id)
+  const isAdmin = session?.user?.role === 'admin'
 
   return (
     <nav
       aria-label='Primary navigation'
       className='ml-auto flex shrink-0 flex-wrap items-center gap-1 sm:gap-2'
     >
-      {isLoggedIn ? <LoggedInMenu /> : <LoggedOutMenu />}
+      {isLoggedIn ? <LoggedInMenu isAdmin={isAdmin} /> : <LoggedOutMenu />}
     </nav>
   )
 }

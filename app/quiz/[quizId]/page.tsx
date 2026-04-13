@@ -5,6 +5,7 @@ import { auth } from '@/auth'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
 import MediaPreview from '@/components/shared/media-preview'
+import { QUIZ_MEDIA_BOX_CLASS, QUIZ_MEDIA_SIZES } from '@/lib/constants/media'
 
 type PageProps = {
   params: Promise<{
@@ -25,9 +26,6 @@ type QuizDetails = {
   isPublished?: boolean
   questions: Types.ObjectId[]
 }
-
-const MEDIA_BOX =
-  'relative mt-4 h-64 w-full max-w-3xl overflow-hidden rounded-xl border border-slate-200'
 
 export default async function QuizDetailsPage({ params }: PageProps) {
   const { quizId } = await params
@@ -76,8 +74,12 @@ export default async function QuizDetailsPage({ params }: PageProps) {
         </div>
 
         {quiz.image?.trim() ? (
-          <div className={MEDIA_BOX}>
-            <MediaPreview url={quiz.image} alt={`${quiz.name} media`} />
+          <div className={QUIZ_MEDIA_BOX_CLASS}>
+            <MediaPreview
+              url={quiz.image}
+              alt={`${quiz.name} media`}
+              sizes={QUIZ_MEDIA_SIZES}
+            />
           </div>
         ) : null}
 

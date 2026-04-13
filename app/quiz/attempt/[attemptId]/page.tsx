@@ -5,6 +5,10 @@ import {
   completeQuizAttempt,
 } from '@/lib/actions/quizAttempt.actions'
 import MediaPreview from '@/components/shared/media-preview'
+import {
+  QUESTION_MEDIA_BOX_CLASS,
+  QUESTION_MEDIA_SIZES,
+} from '@/lib/constants/media'
 
 type PageProps = {
   params: Promise<{
@@ -37,9 +41,6 @@ type ActiveAttempt = {
   }[]
   questions: AttemptQuestion[]
 }
-
-const MEDIA_BOX =
-  'relative mt-3 h-48 w-96 overflow-hidden rounded-lg border border-slate-200'
 
 export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const { attemptId } = await params
@@ -97,8 +98,12 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
         </h2>
 
         {currentQuestion.image?.trim() ? (
-          <div className={MEDIA_BOX}>
-            <MediaPreview url={currentQuestion.image} alt='Question media' />
+          <div className={QUESTION_MEDIA_BOX_CLASS}>
+            <MediaPreview
+              url={currentQuestion.image}
+              alt='Question media'
+              sizes={QUESTION_MEDIA_SIZES}
+            />
           </div>
         ) : null}
 
@@ -133,10 +138,11 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
                 ) : null}
 
                 {opt.image?.trim() ? (
-                  <div className={MEDIA_BOX}>
+                  <div className={QUESTION_MEDIA_BOX_CLASS}>
                     <MediaPreview
                       url={opt.image}
                       alt={`Option ${idx + 1} media`}
+                      sizes={QUESTION_MEDIA_SIZES}
                     />
                   </div>
                 ) : null}
