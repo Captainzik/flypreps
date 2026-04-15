@@ -54,7 +54,7 @@ export async function upsertLeaderboardFromAttempt({
         averagePercentage: 0,
       },
     },
-    { upsert: true, new: true, session },
+    { upsert: true, returnDocument: 'after', session },
   )
 
   if (!updated) {

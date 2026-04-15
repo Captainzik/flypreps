@@ -10,6 +10,13 @@ import { SubmitQuizAttemptWithKeySchema } from '@/lib/validator'
 import type { ISubmitQuizAttemptInput } from '@/types'
 import { upsertLeaderboardFromAttempt } from '@/lib/actions/leaderboard.actions'
 
+// Ensure referenced models are registered in serverless runtime before populate()
+import '@/lib/db/models/question.model'
+import '@/lib/db/models/quiz.model'
+import '@/lib/db/models/user.model'
+import '@/lib/db/models/attempts.model'
+import '@/lib/db/models/leaderboard.model'
+
 const isMongoDuplicateKeyError = (err: unknown): err is { code: number } => {
   return (
     typeof err === 'object' &&
@@ -363,7 +370,7 @@ export async function submitQuizAttempt(
         $set: { lastAttemptAt: new Date() },
         $setOnInsert: { averagePercentage: 0 },
       },
-      { upsert: true, new: true, session },
+      { upsert: true, returnDocument: 'after', session },
     )
 
     if (!lbAfterInc) {
