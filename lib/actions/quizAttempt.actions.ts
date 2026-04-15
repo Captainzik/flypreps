@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { connectToDatabase } from '@/lib/db'
 import { Quiz } from '../db/models/quiz.model'
 import { User } from '../db/models/user.model'
 import { Leaderboard } from '../db/models/leaderboard.model'
@@ -23,6 +24,8 @@ export async function startQuizAttempt(input: {
   userId: string
   attemptKey?: string
 }) {
+  await connectToDatabase()
+
   const { quizId, userId, attemptKey } = input
 
   const quiz = await Quiz.findById(quizId)
@@ -67,6 +70,8 @@ export async function getActiveQuizAttempt(params: {
   attemptId: string
   userId: string
 }) {
+  await connectToDatabase()
+
   const attempt = await QuizAttempt.findOne({
     _id: params.attemptId,
     user: params.userId,
@@ -137,6 +142,8 @@ export async function submitAnswerToAttempt(input: {
   selectedOptionIndex: number
   timeSpentMs?: number
 }) {
+  await connectToDatabase()
+
   const {
     attemptId,
     userId,
@@ -182,6 +189,8 @@ export async function submitQuizAttempt(
   userId: string,
   rawPayload: ISubmitQuizAttemptInput,
 ) {
+  await connectToDatabase()
+
   const payload = SubmitQuizAttemptWithKeySchema.parse(rawPayload)
 
   const session = await mongoose.startSession()
@@ -428,6 +437,8 @@ type CompleteQuizAttemptResult = {
 export async function completeQuizAttempt(
   input: CompleteQuizAttemptInput,
 ): Promise<CompleteQuizAttemptResult> {
+  await connectToDatabase()
+
   const { attemptId, userId, attemptKey } = input
 
   const session = await mongoose.startSession()
@@ -594,6 +605,8 @@ export async function getQuizAttemptResult(params: {
   attemptId: string
   userId: string
 }) {
+  await connectToDatabase()
+
   const attempt = await QuizAttempt.findOne({
     _id: params.attemptId,
     user: params.userId,
@@ -682,6 +695,8 @@ export async function getUserQuizHistory(params: {
   userId: string
   limit?: number
 }): Promise<QuizHistoryItem[]> {
+  await connectToDatabase()
+
   const limit = Math.min(Math.max(params.limit ?? 50, 1), 200)
 
   const attempts = await QuizAttempt.find({
@@ -741,6 +756,8 @@ export async function getUserFeedActivity(params: {
   userId: string
   limit?: number
 }): Promise<FeedActivityItem[]> {
+  await connectToDatabase()
+
   const limit = Math.min(Math.max(params.limit ?? 50, 1), 200)
 
   const attempts = await QuizAttempt.find({

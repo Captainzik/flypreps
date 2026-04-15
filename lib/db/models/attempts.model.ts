@@ -32,11 +32,13 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     quiz: {
       type: Schema.Types.ObjectId,
       ref: 'Quiz',
       required: true,
+      index: true,
     },
     startedAt: {
       type: Date,
@@ -45,6 +47,7 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
     },
     completedAt: {
       type: Date,
+      index: true,
     },
     timeTakenMs: {
       type: Number,
@@ -74,6 +77,7 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
     completed: {
       type: Boolean,
       default: false,
+      index: true,
     },
     questionsAnswered: {
       type: Number,
@@ -114,33 +118,31 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
     category: {
       type: String,
       enum: ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD'],
+      index: true,
     },
   },
   {
     timestamps: true,
+    bufferCommands: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },
 )
 
-// Indexes
 QuizAttemptSchema.index({ user: 1, quiz: 1 })
 QuizAttemptSchema.index({ quiz: 1, completed: 1, score: -1 })
 QuizAttemptSchema.index({ user: 1, completedAt: -1 })
-QuizAttemptSchema.index({ category: 1 })
 QuizAttemptSchema.index(
   { user: 1, quiz: 1, attemptKey: 1 },
   { unique: true, sparse: true },
 )
 
-// Virtual: duration in minutes
 QuizAttemptSchema.virtual('durationMinutes').get(function () {
   if (!this.completedAt || !this.startedAt) return 0
   const ms = this.completedAt.getTime() - this.startedAt.getTime()
   return Math.round(ms / 60000)
 })
 
-// Pre-save: calculate percentage
 QuizAttemptSchema.pre('save', function (this: QuizAttemptDoc) {
   if (this.isModified('score') || this.isModified('maxScore')) {
     this.percentage = this.maxScore > 0 ? (this.score / this.maxScore) * 100 : 0
