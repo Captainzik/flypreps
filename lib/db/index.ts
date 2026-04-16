@@ -1,3 +1,4 @@
+import 'server-only'
 import mongoose, { Mongoose } from 'mongoose'
 import { MongoClient } from 'mongodb'
 

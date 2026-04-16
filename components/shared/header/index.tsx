@@ -9,7 +9,7 @@ export default function Header() {
           href='/'
           className='text-lg font-bold tracking-tight text-slate-900'
         >
-          FlyPrep
+          RadPreps
         </Link>
         <Menu />
       </div>

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { requireApiAdmin } from '@/lib/auth/api-guards'
+import { connectToDatabase } from '@/lib/db'
 
 export async function GET() {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 

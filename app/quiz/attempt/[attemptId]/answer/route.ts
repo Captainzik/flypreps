@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { submitAnswerToAttempt } from '@/lib/actions/quizAttempt.actions'
+import { connectToDatabase } from '@/lib/db'
 
 type RouteContext = {
   params: Promise<{
@@ -9,6 +10,7 @@ type RouteContext = {
 }
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
+  await connectToDatabase()
   const { attemptId } = await params
 
   const session = await auth()

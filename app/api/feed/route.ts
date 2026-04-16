@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getGlobalFeed } from '@/lib/actions/feed.actions'
 import { ok, fail } from '@/lib/http/response'
 import { requireRouteUser } from '@/lib/auth/route-auth'
+import { connectToDatabase } from '@/lib/db'
 
 type FeedPageData = {
   items: Awaited<ReturnType<typeof getGlobalFeed>>
@@ -11,6 +12,7 @@ type FeedPageData = {
 }
 
 export async function GET(req: NextRequest) {
+  await connectToDatabase()
   try {
     await requireRouteUser()
 

@@ -3,6 +3,7 @@ import { Types } from 'mongoose'
 import { User } from '@/lib/db/models/user.model'
 import UserRoleForm from '@/components/admin/actions/user-role-form'
 import UserRowActions from '@/components/admin/actions/user-row-actions'
+import { connectToDatabase } from '@/lib/db'
 
 type UserRole = 'user' | 'admin' | 'moderator'
 
@@ -15,6 +16,7 @@ type UserRow = {
 }
 
 export default async function AdminUsersPage() {
+  await connectToDatabase()
   const users = (await User.find({})
     .sort({ createdAt: -1 })
     .select('email username role isVerified')

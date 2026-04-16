@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { SubmitEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Role = 'user' | 'moderator' | 'admin'
@@ -29,7 +29,7 @@ export default function CreateUserForm() {
 
   const [saving, setSaving] = useState(false)
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
 
     try {

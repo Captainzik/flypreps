@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { completeQuizAttempt } from '@/lib/actions/quizAttempt.actions'
+import { connectToDatabase } from '@/lib/db'
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ attemptId: string }> },
 ) {
+  await connectToDatabase()
   try {
     const session = await auth()
 

@@ -1,7 +1,6 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { connectToDatabase } from '@/lib/db'
 import { User } from '@/lib/db/models/user.model'
 
 type Plan = {
@@ -41,8 +40,6 @@ export default async function SubscriptionPage() {
   if (!session?.user?.id) {
     redirect('/signin?callbackUrl=/subscription')
   }
-
-  await connectToDatabase()
 
   const user = await User.findById(session.user.id)
     .select(

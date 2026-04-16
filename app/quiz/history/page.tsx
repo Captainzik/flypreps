@@ -5,7 +5,6 @@ import { getUserQuizHistory } from '@/lib/actions/quizAttempt.actions'
 
 export default async function QuizHistoryPage() {
   const session = await auth()
-
   if (!session?.user?.id) {
     redirect('/signin?callbackUrl=/quiz/history')
   }

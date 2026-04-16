@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Types } from 'mongoose'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import QuizRowActions from '@/components/admin/actions/quiz-row-actions'
+import { connectToDatabase } from '@/lib/db'
 
 type QuizRow = {
   _id: Types.ObjectId
@@ -12,6 +13,7 @@ type QuizRow = {
 }
 
 export default async function AdminQuizzesPage() {
+  await connectToDatabase()
   const quizzes = (await Quiz.find({})
     .sort({ createdAt: -1 })
     .select('name category isPublished questions')

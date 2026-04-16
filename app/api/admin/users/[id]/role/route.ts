@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireApiAdmin } from '@/lib/auth/api-guards'
 import { User } from '@/lib/db/models/user.model'
 import { z, ZodError } from 'zod'
+import { connectToDatabase } from '@/lib/db'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -10,6 +11,7 @@ const UpdateRoleSchema = z.object({
 })
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -21,7 +23,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const updated = await User.findByIdAndUpdate(
       id,
       { $set: { role: payload.role } },
-      { new: true },
+      { returnDocument: 'after' },
     )
       .select('_id email username role isVerified')
       .lean()

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { User } from '@/lib/db/models/user.model'
 import EditUserForm from '@/components/admin/forms/edit-user-form'
+import { connectToDatabase } from '@/lib/db'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -20,6 +21,7 @@ type EditableUser = {
 }
 
 export default async function EditAdminUserPage({ params }: PageProps) {
+  await connectToDatabase()
   const { id } = await params
 
   const user = (await User.findById(id)

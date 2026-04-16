@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { cloudinary } from '@/lib/cloudinary'
+import { connectToDatabase } from '@/lib/db'
 
 export const runtime = 'nodejs'
 
@@ -33,6 +34,7 @@ function getFileKindAndLimit(mimeType: string) {
 }
 
 export async function POST(req: NextRequest) {
+  await connectToDatabase()
   try {
     const session = await auth()
     if (!session?.user?.id) {

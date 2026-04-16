@@ -3,6 +3,7 @@ import { z, ZodError } from 'zod'
 import bcrypt from 'bcryptjs'
 import { requireApiAdmin } from '@/lib/auth/api-guards'
 import { User } from '@/lib/db/models/user.model'
+import { connectToDatabase } from '@/lib/db'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -17,6 +18,7 @@ const UserPatchSchema = z.object({
 })
 
 export async function GET(_: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -39,6 +41,7 @@ export async function GET(_: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -108,7 +111,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const updated = await User.findByIdAndUpdate(
       id,
       { $set: update },
-      { new: true },
+      { returnDocument: 'after' },
     )
       .select(
         '_id email username fullName avatar role isVerified favoriteCategories lifetimeTotalScore currentStreak longestStreak createdAt updatedAt',
@@ -143,6 +146,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 

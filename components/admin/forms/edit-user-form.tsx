@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useMemo, useState } from 'react'
+import { SubmitEvent, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Role = 'user' | 'admin' | 'moderator'
@@ -73,7 +73,7 @@ export default function EditUserForm({
     initialIsVerified,
   ])
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
 
     if (!isDirty) {

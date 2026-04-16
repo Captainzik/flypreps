@@ -3,6 +3,7 @@ import { z, ZodError } from 'zod'
 import bcrypt from 'bcryptjs'
 import { requireApiAdmin } from '@/lib/auth/api-guards'
 import { User } from '@/lib/db/models/user.model'
+import { connectToDatabase } from '@/lib/db'
 
 const CreateUserSchema = z.object({
   email: z.string().email(),
@@ -15,6 +16,7 @@ const CreateUserSchema = z.object({
 })
 
 export async function GET() {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -29,6 +31,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 

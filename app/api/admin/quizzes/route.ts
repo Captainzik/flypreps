@@ -4,8 +4,10 @@ import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
 import { CreateQuizSchema } from '@/lib/validator'
 import { ZodError } from 'zod'
+import { connectToDatabase } from '@/lib/db'
 
 export async function GET() {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -18,6 +20,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 

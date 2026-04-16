@@ -44,7 +44,6 @@ type ActiveAttempt = {
 
 export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const { attemptId } = await params
-
   const session = await auth()
 
   if (!session?.user?.id) {

@@ -3,8 +3,10 @@ import { auth } from '@/auth'
 import { submitQuizAttempt } from '@/lib/actions/quizAttempt.actions'
 import { SubmitQuizAttemptWithKeySchema } from '@/lib/validator'
 import { ZodError } from 'zod'
+import { connectToDatabase } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
+  await connectToDatabase()
   const session = await auth()
 
   if (!session?.user?.id) {

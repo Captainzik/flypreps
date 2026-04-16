@@ -3,10 +3,12 @@ import { requireApiAdmin } from '@/lib/auth/api-guards'
 import { Question } from '@/lib/db/models/question.model'
 import { QuestionPatchSchema } from '@/lib/validator'
 import { ZodError } from 'zod'
+import { connectToDatabase } from '@/lib/db'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
 export async function GET(_: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -24,6 +26,7 @@ export async function GET(_: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
@@ -51,7 +54,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const updated = await Question.findByIdAndUpdate(
       id,
       { $set: update },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean()
 
     if (!updated) {
@@ -82,6 +85,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_: NextRequest, context: RouteContext) {
+  await connectToDatabase()
   const guard = await requireApiAdmin()
   if (!guard.ok) return guard.response
 
