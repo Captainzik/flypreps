@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import { startQuizAttempt } from '@/lib/actions/quizAttempt.actions'
+import { connectToDatabase } from '@/lib/db'
 
 type PageProps = {
   params: Promise<{
@@ -18,6 +19,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function QuizStartPage({ params }: PageProps) {
+  await connectToDatabase()
   const { quizId } = await params
 
   const session = await auth()

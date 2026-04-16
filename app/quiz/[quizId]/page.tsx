@@ -6,6 +6,7 @@ import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
 import MediaPreview from '@/components/shared/media-preview'
 import { QUIZ_MEDIA_BOX_CLASS, QUIZ_MEDIA_SIZES } from '@/lib/constants/media'
+import { connectToDatabase } from '@/lib/db'
 
 type PageProps = {
   params: Promise<{
@@ -28,6 +29,7 @@ type QuizDetails = {
 }
 
 export default async function QuizDetailsPage({ params }: PageProps) {
+  await connectToDatabase()
   const { quizId } = await params
 
   const session = await auth()
