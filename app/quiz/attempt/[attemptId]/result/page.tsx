@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getQuizAttemptResult } from '@/lib/actions/quizAttempt.actions'
 import MediaPreview from '@/components/shared/media-preview'
+import QuizReviewForm from '@/components/reviews/quiz-review-form'
 
 type PageProps = {
   params: Promise<{
@@ -128,6 +129,10 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
             Back to quiz details
           </Link>
         </div>
+      </section>
+
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+        <QuizReviewForm quizId={result.quiz.id} userId={session.user.id} />
       </section>
 
       <section className='space-y-3'>
