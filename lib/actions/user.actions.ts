@@ -8,12 +8,19 @@ import { QuizAttempt } from '@/lib/db/models/attempts.model'
 import { Leaderboard } from '@/lib/db/models/leaderboard.model'
 import { UserUpdateSchema } from '@/lib/validator'
 
+const DICEBEAR_STYLES = new Set([
+  'fun-emoji',
+  'bottts',
+  'adventurer',
+  'avataaars',
+])
+
 export type UpdateProfileInput = {
   userId: string
   email: string
   username?: string
   fullName?: string
-  avatar?: string
+  avatarStyle?: 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars'
 }
 
 export type ChangePasswordInput = {
@@ -21,6 +28,22 @@ export type ChangePasswordInput = {
   oldPassword: string
   newPassword: string
   confirmNewPassword: string
+}
+
+function normalizeAvatarStyle(style?: string) {
+  if (!style) return 'adventurer'
+  return DICEBEAR_STYLES.has(
+    style as typeof DICEBEAR_STYLES extends Set<infer T> ? T : never,
+  )
+    ? (style as 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars')
+    : 'adventurer'
+}
+
+function buildDiceBearAvatar(
+  style: 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars',
+  seed: string,
+) {
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`
 }
 
 export async function updateProfile(input: UpdateProfileInput) {
@@ -31,7 +54,7 @@ export async function updateProfile(input: UpdateProfileInput) {
     email: input.email.trim().toLowerCase(),
     username: input.username?.trim() || undefined,
     fullName: input.fullName?.trim() || undefined,
-    avatar: input.avatar?.trim() || '',
+    avatarStyle: normalizeAvatarStyle(input.avatarStyle),
   })
 
   const existingByEmail = await User.findOne({
@@ -58,22 +81,28 @@ export async function updateProfile(input: UpdateProfileInput) {
     }
   }
 
-  const updated = await User.findByIdAndUpdate(
-    parsed._id,
-    {
-      $set: {
-        email: parsed.email,
-        username: parsed.username,
-        fullName: parsed.fullName ?? '',
-        avatar: parsed.avatar ?? '',
-      },
-    },
-    { new: true, runValidators: true },
+  const user = await User.findById(parsed._id).select(
+    '_id email username fullName avatar avatarStyle avatarSeed',
   )
-    .select('email username fullName avatar')
-    .lean()
 
-  if (!updated) throw new Error('User not found')
+  if (!user) throw new Error('User not found')
+
+  const avatarSeed =
+    user.avatarSeed || parsed.username || parsed.email || user._id.toString()
+  const avatarStyle = normalizeAvatarStyle(
+    input.avatarStyle || user.avatarStyle,
+  )
+
+  const avatar = buildDiceBearAvatar(avatarStyle, avatarSeed)
+
+  user.email = parsed.email || user.email
+  user.username = parsed.username
+  user.fullName = parsed.fullName ?? ''
+  user.avatarStyle = avatarStyle
+  user.avatarSeed = avatarSeed
+  user.avatar = avatar
+
+  await user.save()
 
   revalidatePath('/profile')
   revalidatePath('/profile/update')
@@ -83,10 +112,12 @@ export async function updateProfile(input: UpdateProfileInput) {
   return {
     success: true,
     user: {
-      email: updated.email,
-      username: updated.username ?? '',
-      fullName: updated.fullName ?? '',
-      avatar: updated.avatar ?? '',
+      email: user.email,
+      username: user.username ?? '',
+      fullName: user.fullName ?? '',
+      avatar: user.avatar ?? '',
+      avatarStyle: user.avatarStyle ?? 'adventurer',
+      avatarSeed: user.avatarSeed ?? '',
     },
   }
 }

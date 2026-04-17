@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useTransition } from 'react'
 import { signOut } from 'next-auth/react'
 import { toast } from 'sonner'
@@ -9,9 +10,8 @@ import {
   resetUserData,
   deleteUserAccount,
 } from '@/lib/actions/user.actions'
-import MediaUploader, {
-  UploadedMediaResult,
-} from '@/components/profile/media-uploader'
+
+type AvatarStyle = 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars'
 
 type Props = {
   userId: string
@@ -19,6 +19,18 @@ type Props = {
   initialUsername: string
   initialFullName: string
   initialAvatar: string
+  initialAvatarStyle?: AvatarStyle
+}
+
+const AVATAR_STYLES: AvatarStyle[] = [
+  'fun-emoji',
+  'bottts',
+  'adventurer',
+  'avataaars',
+]
+
+function buildDiceBearAvatar(style: AvatarStyle, seed: string) {
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'user')}`
 }
 
 export default function UpdateProfileClient({
@@ -27,12 +39,19 @@ export default function UpdateProfileClient({
   initialUsername,
   initialFullName,
   initialAvatar,
+  initialAvatarStyle = 'adventurer',
 }: Props) {
   const [profile, setProfile] = useState({
     email: initialEmail,
     username: initialUsername,
     fullName: initialFullName,
-    avatar: initialAvatar,
+    avatarStyle: initialAvatarStyle,
+    avatar:
+      initialAvatar ||
+      buildDiceBearAvatar(
+        initialAvatarStyle,
+        initialUsername || initialEmail || userId,
+      ),
   })
 
   const [passwordForm, setPasswordForm] = useState({
@@ -45,13 +64,8 @@ export default function UpdateProfileClient({
   const [isPending, startTransition] = useTransition()
 
   const canDelete = deleteConfirmText === 'DELETE'
-
-  function handleUploadedMedia(result: UploadedMediaResult) {
-    if (result.kind !== 'image') {
-      toast.info('Video uploaded. Profile avatar is usually an image.')
-    }
-    setProfile((prev) => ({ ...prev, avatar: result.url }))
-  }
+  const avatarSeed = profile.username || profile.email || userId
+  const previewAvatar = buildDiceBearAvatar(profile.avatarStyle, avatarSeed)
 
   return (
     <main className='space-y-6'>
@@ -66,19 +80,25 @@ export default function UpdateProfileClient({
         <h2 className='text-lg font-semibold text-slate-900'>Profile info</h2>
 
         <form
-          className='mt-4 space-y-3'
+          className='mt-4 space-y-4'
           onSubmit={(e) => {
             e.preventDefault()
 
             startTransition(async () => {
               try {
-                await updateProfile({
+                const result = await updateProfile({
                   userId,
                   email: profile.email,
                   username: profile.username,
                   fullName: profile.fullName,
-                  avatar: profile.avatar,
+                  avatarStyle: profile.avatarStyle,
                 })
+
+                setProfile((prev) => ({
+                  ...prev,
+                  avatar: result.user.avatar,
+                }))
+
                 toast.success('Profile updated successfully')
               } catch (error) {
                 toast.error(
@@ -122,22 +142,80 @@ export default function UpdateProfileClient({
             disabled={isPending}
           />
 
-          <input
-            className='w-full rounded border p-2'
-            placeholder='Avatar URL'
-            value={profile.avatar}
-            onChange={(e) =>
-              setProfile((s) => ({ ...s, avatar: e.target.value }))
-            }
-            disabled={isPending}
-          />
+          <div className='space-y-3'>
+            <div>
+              <p className='text-sm font-medium text-slate-700'>
+                Choose your avatar style
+              </p>
+              <p className='text-xs text-slate-500'>
+                Pick avatar style that best represents you.
+              </p>
+            </div>
 
-          <MediaUploader
-            value={profile.avatar}
-            disabled={isPending}
-            label='Upload profile media'
-            onUploaded={handleUploadedMedia}
-          />
+            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+              {AVATAR_STYLES.map((style) => {
+                const selected = profile.avatarStyle === style
+                const url = buildDiceBearAvatar(style, avatarSeed)
+
+                return (
+                  <button
+                    key={style}
+                    type='button'
+                    disabled={isPending}
+                    onClick={() =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        avatarStyle: style,
+                        avatar: url,
+                      }))
+                    }
+                    className={`rounded-xl border p-3 text-left transition ${
+                      selected
+                        ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    } disabled:opacity-60`}
+                  >
+                    <div className='flex items-center gap-3'>
+                      <div className='relative h-14 w-14 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+                        <Image
+                          src={url}
+                          alt={style}
+                          fill
+                          sizes='56px'
+                          unoptimized
+                          className='object-cover'
+                        />
+                      </div>
+                      <div>
+                        <p className='text-sm font-medium text-slate-900'>
+                          {style}
+                        </p>
+                        <p className='text-xs text-slate-500'>
+                          {selected ? 'Selected' : 'Click to choose'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className='rounded-lg border border-slate-200 p-3'>
+            <p className='mb-2 text-sm font-medium text-slate-700'>
+              Selected avatar preview
+            </p>
+            <div className='relative h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+              <Image
+                src={previewAvatar}
+                alt='Selected avatar'
+                fill
+                sizes='112px'
+                unoptimized
+                className='object-cover'
+              />
+            </div>
+          </div>
 
           <button
             type='submit'
@@ -257,7 +335,7 @@ export default function UpdateProfileClient({
           </button>
 
           <div className='rounded-md border border-red-300 p-3'>
-            <p className='text-sm text-red-700 font-medium'>
+            <p className='text-sm font-medium text-red-700'>
               Type <span className='font-bold'>DELETE</span> to confirm
               permanent account deletion.
             </p>

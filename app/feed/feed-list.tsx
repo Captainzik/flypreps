@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -23,6 +24,35 @@ type FeedApiFailure = {
 type FeedApiResponse = FeedApiSuccess | FeedApiFailure
 
 const PAGE_SIZE = 20
+
+function Avatar({ src, name }: { src: string; name: string }) {
+  if (!src) {
+    return (
+      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'>
+        {name
+          .split(' ')
+          .filter(Boolean)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()}
+      </div>
+    )
+  }
+
+  return (
+    <div className='relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+      <Image
+        src={src}
+        alt={`${name} avatar`}
+        fill
+        sizes='40px'
+        unoptimized
+        className='object-cover'
+      />
+    </div>
+  )
+}
 
 export default function FeedList({
   initialItems,
@@ -106,13 +136,16 @@ export default function FeedList({
           key={item.attemptId}
           className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
         >
-          <p className='text-sm text-slate-700'>
-            <span className='font-semibold text-slate-900'>
-              {item.userName}
-            </span>{' '}
-            did <span className='font-semibold'>{item.quizName}</span>{' '}
-            {item.timeAgo}
-          </p>
+          <div className='flex items-start gap-3'>
+            <Avatar src={item.userAvatar} name={item.userName} />
+            <p className='text-sm text-slate-700'>
+              <span className='font-semibold text-slate-900'>
+                {item.userName}
+              </span>{' '}
+              did <span className='font-semibold'>{item.quizName}</span>{' '}
+              {item.timeAgo}
+            </p>
+          </div>
 
           <div className='mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-3'>
             <p>

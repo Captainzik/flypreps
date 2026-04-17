@@ -1,8 +1,54 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { User } from '@/lib/db/models/user.model'
 import { Leaderboard } from '@/lib/db/models/leaderboard.model'
 import { getCurrentWeekPeriod } from '@/lib/utils'
 import { pageBootstrap } from '@/lib/page-conventions'
+
+type ProfileUser = {
+  email?: string
+  username?: string
+  fullName?: string
+  currentStreak?: number
+  longestStreak?: number
+  lifetimeTotalScore?: number
+  avatar?: string
+}
+
+type WeeklyLeaderboardEntry = {
+  quizAttempts?: number
+  bestPercentage?: number
+  totalScore?: number
+}
+
+function AvatarPreview({ avatar, name }: { avatar?: string; name: string }) {
+  if (!avatar) {
+    return (
+      <div className='flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold text-slate-500'>
+        {name
+          .split(' ')
+          .filter(Boolean)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()}
+      </div>
+    )
+  }
+
+  return (
+    <div className='relative h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+      <Image
+        src={avatar}
+        alt={`${name} avatar`}
+        fill
+        sizes='80px'
+        unoptimized
+        className='object-cover'
+      />
+    </div>
+  )
+}
 
 export default async function ProfilePage() {
   const session = await pageBootstrap('/profile')
@@ -10,7 +56,7 @@ export default async function ProfilePage() {
   const [user, weeklyEntry] = await Promise.all([
     User.findById(session.user.id)
       .select(
-        'email username fullName currentStreak longestStreak lifetimeTotalScore',
+        'email username fullName currentStreak longestStreak lifetimeTotalScore avatar',
       )
       .lean(),
     Leaderboard.findOne({
@@ -21,42 +67,54 @@ export default async function ProfilePage() {
       .lean(),
   ])
 
+  const profileUser = user as ProfileUser | null
+  const leaderboardEntry = weeklyEntry as WeeklyLeaderboardEntry | null
+
+  const displayName =
+    profileUser?.fullName ||
+    profileUser?.username ||
+    profileUser?.email ||
+    'User'
+
   return (
     <main className='space-y-6'>
       <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Profile</h1>
-        <p className='mt-1 text-sm text-slate-600'>
-          {user?.fullName || user?.username || user?.email || 'User'}
-        </p>
+        <div className='flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
+          <AvatarPreview avatar={profileUser?.avatar} name={displayName} />
+          <div>
+            <h1 className='text-2xl font-bold text-slate-900'>Profile</h1>
+            <p className='mt-1 text-sm text-slate-600'>{displayName}</p>
+          </div>
+        </div>
       </section>
 
       <section className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
         <article className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'>
           <p className='text-xs text-slate-500'>Current streak</p>
           <p className='mt-2 text-2xl font-bold text-slate-900'>
-            {user?.currentStreak ?? 0}
+            {profileUser?.currentStreak ?? 0}
           </p>
         </article>
 
         <article className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'>
           <p className='text-xs text-slate-500'>Longest streak</p>
           <p className='mt-2 text-2xl font-bold text-slate-900'>
-            {user?.longestStreak ?? 0}
+            {profileUser?.longestStreak ?? 0}
           </p>
         </article>
 
         <article className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'>
           <p className='text-xs text-slate-500'>Total XP points</p>
           <p className='mt-2 text-2xl font-bold text-slate-900'>
-            {user?.lifetimeTotalScore ?? 0}
+            {profileUser?.lifetimeTotalScore ?? 0}
           </p>
         </article>
 
         <article className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'>
           <p className='text-xs text-slate-500'>Leaderboard status</p>
           <p className='mt-2 text-sm text-slate-700'>
-            {weeklyEntry
-              ? `${weeklyEntry.quizAttempts} attempts • best ${weeklyEntry.bestPercentage.toFixed(1)}%`
+            {leaderboardEntry
+              ? `${leaderboardEntry.quizAttempts ?? 0} attempts • best ${(leaderboardEntry.bestPercentage ?? 0).toFixed(1)}%`
               : 'No weekly rank yet'}
           </p>
         </article>

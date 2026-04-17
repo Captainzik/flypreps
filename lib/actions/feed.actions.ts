@@ -7,6 +7,7 @@ import '@/lib/db/models/user.model'
 export type GlobalFeedItem = {
   attemptId: string
   userName: string
+  userAvatar: string
   quizName: string
   quizId: string
   category: string
@@ -50,7 +51,7 @@ export async function getGlobalFeed(params?: { limit?: number }) {
   const attempts = await QuizAttempt.find({ completed: true })
     .sort({ completedAt: -1, _id: -1 })
     .limit(limit)
-    .populate({ path: 'user', select: 'fullName username email' })
+    .populate({ path: 'user', select: 'fullName username email avatar' })
     .populate({ path: 'quiz', select: 'name' })
     .lean()
 
@@ -58,7 +59,12 @@ export async function getGlobalFeed(params?: { limit?: number }) {
 
   return attempts.map((attempt) => {
     const userObj = attempt.user as
-      | { fullName?: string; username?: string; email?: string }
+      | {
+          fullName?: string
+          username?: string
+          email?: string
+          avatar?: string
+        }
       | undefined
 
     const quizObj = attempt.quiz as
@@ -71,6 +77,7 @@ export async function getGlobalFeed(params?: { limit?: number }) {
       attemptId: attempt._id.toString(),
       userName:
         userObj?.fullName || userObj?.username || userObj?.email || 'Someone',
+      userAvatar: userObj?.avatar || '',
       quizName: quizObj?.name || 'Quiz',
       quizId: quizObj?._id?.toString() || '',
       category: attempt.category || '',

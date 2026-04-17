@@ -1,11 +1,20 @@
 import { HydratedDocument, Model, model, models, Schema } from 'mongoose'
 
+const DICEBEAR_STYLES = new Set([
+  'fun-emoji',
+  'bottts',
+  'adventurer',
+  'avataaars',
+])
+
 export interface IUser {
   email: string
   username?: string
   password?: string
   fullName?: string
   avatar?: string
+  avatarStyle?: 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars'
+  avatarSeed?: string
   role: 'user' | 'admin' | 'moderator'
   isVerified: boolean
   favoriteCategories: string[]
@@ -52,11 +61,17 @@ const UserSchema = new Schema<IUser>(
     avatar: {
       type: String,
       trim: true,
-      validate: {
-        validator: (v: string) =>
-          !v || /^https?:\/\/[^\s/$.?#].[^\s]*$/.test(v),
-        message: 'Invalid avatar URL',
-      },
+      default: '',
+    },
+    avatarStyle: {
+      type: String,
+      enum: ['fun-emoji', 'bottts', 'adventurer', 'avataaars'],
+      default: 'adventurer',
+    },
+    avatarSeed: {
+      type: String,
+      trim: true,
+      default: '',
     },
     role: {
       type: String,
@@ -112,8 +127,6 @@ const UserSchema = new Schema<IUser>(
   },
 )
 
-// Keep non-duplicate indexes only.
-// NOTE: email + username indexes are already defined at field level above.
 UserSchema.index({ role: 1 })
 UserSchema.index({ lifetimeTotalScore: -1, role: 1 })
 UserSchema.index({ lastActive: -1 })
@@ -128,6 +141,19 @@ UserSchema.virtual('reviewCount', {
 
 UserSchema.pre('save', function (this: IUserDocument) {
   this.lastActive = new Date()
+
+  if (!this.avatarStyle || !DICEBEAR_STYLES.has(this.avatarStyle)) {
+    this.avatarStyle = 'adventurer'
+  }
+
+  if (!this.avatarSeed) {
+    this.avatarSeed = this.username || this.email || this._id?.toString() || ''
+  }
+
+  if (!this.avatar) {
+    const seed = encodeURIComponent(this.avatarSeed || this.email || 'user')
+    this.avatar = `https://api.dicebear.com/9.x/${this.avatarStyle}/svg?seed=${seed}`
+  }
 })
 
 export const User: Model<IUser> =

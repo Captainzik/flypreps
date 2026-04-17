@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { connectToDatabase } from '@/lib/db'
@@ -16,6 +17,35 @@ type LeaderboardRow = {
   averagePercentage: number
   bestPercentage: number
   lastAttemptAt: Date
+}
+
+function Avatar({ src, name }: { src: string; name: string }) {
+  if (!src) {
+    return (
+      <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'>
+        {name
+          .split(' ')
+          .filter(Boolean)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()}
+      </div>
+    )
+  }
+
+  return (
+    <div className='relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+      <Image
+        src={src}
+        alt={`${name} avatar`}
+        fill
+        sizes='40px'
+        unoptimized
+        className='object-cover'
+      />
+    </div>
+  )
 }
 
 export default async function LeaderboardPage() {
@@ -104,7 +134,14 @@ export default async function LeaderboardPage() {
                     <td className='px-4 py-3 font-semibold text-slate-900'>
                       #{row.rank}
                     </td>
-                    <td className='px-4 py-3'>{row.userName}</td>
+                    <td className='px-4 py-3'>
+                      <div className='flex items-center gap-3'>
+                        <Avatar src={row.avatar} name={row.userName} />
+                        <span className='font-medium text-slate-900'>
+                          {row.userName}
+                        </span>
+                      </div>
+                    </td>
                     <td className='px-4 py-3'>{row.totalScore}</td>
                     <td className='px-4 py-3'>{row.quizAttempts}</td>
                     <td className='px-4 py-3'>
