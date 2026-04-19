@@ -20,8 +20,10 @@ export default async function AdminQuestionsPage() {
 
   return (
     <main className='space-y-4'>
-      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
-        <h1 className='text-xl font-semibold'>Manage Questions</h1>
+      <div className='flex items-center justify-between rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'>
+        <h1 className='text-xl font-semibold text-slate-900 dark:text-white'>
+          Manage Questions
+        </h1>
         <Link
           href='/admin/questions/new'
           className='rounded-lg bg-slate-900 px-4 py-2 text-sm text-white'
@@ -34,13 +36,15 @@ export default async function AdminQuestionsPage() {
         {questions.map((q) => (
           <div
             key={q._id.toString()}
-            className='rounded-xl border bg-white p-4 shadow-sm'
+            className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'
           >
-            <p className='font-medium text-slate-900'>{q.question}</p>
-            <p className='mt-1 text-sm text-slate-600'>
+            <p className='font-medium text-slate-900 dark:text-white'>
+              {q.question}
+            </p>
+            <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
               Quiz: {q.quizName ?? 'N/A'}
             </p>
-            <p className='text-xs text-slate-500'>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
               Published: {q.isPublished ? 'Yes' : 'No'}
             </p>
 

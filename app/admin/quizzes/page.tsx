@@ -21,8 +21,10 @@ export default async function AdminQuizzesPage() {
 
   return (
     <main className='space-y-4'>
-      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
-        <h1 className='text-xl font-semibold'>Manage Quizzes</h1>
+      <div className='flex items-center justify-between rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'>
+        <h1 className='text-xl font-semibold text-slate-900 dark:text-white'>
+          Manage Quizzes
+        </h1>
         <Link
           href='/admin/quizzes/new'
           className='rounded-lg bg-slate-900 px-4 py-2 text-sm text-white'
@@ -31,9 +33,9 @@ export default async function AdminQuizzesPage() {
         </Link>
       </div>
 
-      <div className='overflow-hidden rounded-xl border bg-white shadow-sm'>
+      <div className='overflow-hidden rounded-xl border dark:border-slate-700 dark:bg-slate-800 shadow-sm'>
         <table className='w-full text-sm'>
-          <thead className='bg-slate-50 text-left'>
+          <thead className='bg-slate-50 dark:bg-slate-700 text-left'>
             <tr>
               <th className='p-3'>Name</th>
               <th className='p-3'>Category</th>
@@ -44,7 +46,10 @@ export default async function AdminQuizzesPage() {
           </thead>
           <tbody>
             {quizzes.map((q) => (
-              <tr key={q._id.toString()} className='border-t'>
+              <tr
+                key={q._id.toString()}
+                className='border-t dark:border-slate-700'
+              >
                 <td className='p-3'>{q.name}</td>
                 <td className='p-3'>{q.category}</td>
                 <td className='p-3'>{q.isPublished ? 'Yes' : 'No'}</td>

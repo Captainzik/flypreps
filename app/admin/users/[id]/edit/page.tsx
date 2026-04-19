@@ -32,9 +32,12 @@ export default async function EditAdminUserPage({ params }: PageProps) {
 
   return (
     <main className='space-y-4'>
-      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
+      <div className='flex items-center justify-between rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'>
         <h1 className='text-xl font-semibold'>Edit User</h1>
-        <Link href='/admin/users' className='rounded border px-3 py-1 text-sm'>
+        <Link
+          href='/admin/users'
+          className='rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-1 text-sm'
+        >
           Back
         </Link>
       </div>

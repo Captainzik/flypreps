@@ -37,14 +37,14 @@ export default function UserRowActions({ userId }: Props) {
     <div className='flex items-center gap-2'>
       <Link
         href={`/admin/users/${userId}/edit`}
-        className='rounded border px-3 py-1 text-xs'
+        className='rounded border px-3 py-1 text-xs dark:border-slate-600 dark:text-slate-300 dark:bg-slate-800'
       >
         Edit
       </Link>
       <button
         onClick={deleteUser}
         disabled={loading}
-        className='rounded border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50'
+        className='rounded border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950'
       >
         {loading ? 'Deleting...' : 'Delete'}
       </button>

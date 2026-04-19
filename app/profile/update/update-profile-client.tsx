@@ -69,15 +69,19 @@ export default function UpdateProfileClient({
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Update Profile</h1>
-        <p className='mt-1 text-sm text-slate-600'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800'>
+        <h1 className='text-2xl font-bold text-slate-900 dark:text-slate-50'>
+          Update Profile
+        </h1>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-300'>
           Update account details and security options.
         </p>
       </section>
 
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h2 className='text-lg font-semibold text-slate-900'>Profile info</h2>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800'>
+        <h2 className='text-lg font-semibold text-slate-900 dark:text-slate-50'>
+          Profile info
+        </h2>
 
         <form
           className='mt-4 space-y-4'
@@ -144,10 +148,10 @@ export default function UpdateProfileClient({
 
           <div className='space-y-3'>
             <div>
-              <p className='text-sm font-medium text-slate-700'>
+              <p className='text-sm font-medium text-slate-700 dark:text-slate-500'>
                 Choose your avatar style
               </p>
-              <p className='text-xs text-slate-500'>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
                 Pick avatar style that best represents you.
               </p>
             </div>
@@ -171,12 +175,12 @@ export default function UpdateProfileClient({
                     }
                     className={`rounded-xl border p-3 text-left transition ${
                       selected
-                        ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900'
-                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                        ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900 dark:border-white dark:bg-slate-700 dark:ring-white'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700'
                     } disabled:opacity-60`}
                   >
                     <div className='flex items-center gap-3'>
-                      <div className='relative h-14 w-14 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+                      <div className='relative h-14 w-14 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'>
                         <Image
                           src={url}
                           alt={style}
@@ -187,10 +191,10 @@ export default function UpdateProfileClient({
                         />
                       </div>
                       <div>
-                        <p className='text-sm font-medium text-slate-900'>
+                        <p className='text-sm font-medium text-slate-900 dark:text-slate-50'>
                           {style}
                         </p>
-                        <p className='text-xs text-slate-500'>
+                        <p className='text-xs text-slate-500 dark:text-slate-400'>
                           {selected ? 'Selected' : 'Click to choose'}
                         </p>
                       </div>
@@ -201,11 +205,11 @@ export default function UpdateProfileClient({
             </div>
           </div>
 
-          <div className='rounded-lg border border-slate-200 p-3'>
-            <p className='mb-2 text-sm font-medium text-slate-700'>
+          <div className='rounded-lg border border-slate-200 p-3 dark:border-slate-700'>
+            <p className='mb-2 text-sm font-medium text-slate-700 dark:text-slate-500'>
               Selected avatar preview
             </p>
-            <div className='relative h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+            <div className='relative h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'>
               <Image
                 src={previewAvatar}
                 alt='Selected avatar'
@@ -227,8 +231,10 @@ export default function UpdateProfileClient({
         </form>
       </section>
 
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h2 className='text-lg font-semibold text-slate-900'>Reset password</h2>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800'>
+        <h2 className='text-lg font-semibold text-slate-900 dark:text-slate-50'>
+          Reset password
+        </h2>
 
         <form
           className='mt-4 space-y-3'
@@ -308,13 +314,15 @@ export default function UpdateProfileClient({
         </form>
       </section>
 
-      <section className='rounded-xl border border-red-200 bg-white p-6 shadow-sm'>
-        <h2 className='text-lg font-semibold text-red-700'>Danger zone</h2>
+      <section className='rounded-xl border border-red-200 bg-white p-6 shadow-sm dark:border-red-700 dark:bg-slate-800'>
+        <h2 className='text-lg font-semibold text-red-700 dark:text-red-500'>
+          Danger zone
+        </h2>
 
         <div className='mt-4 space-y-4'>
           <button
             type='button'
-            className='rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60'
+            className='rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-500 dark:hover:bg-red-950 disabled:opacity-60'
             disabled={isPending}
             onClick={() => {
               startTransition(async () => {
@@ -334,8 +342,8 @@ export default function UpdateProfileClient({
             Reset data
           </button>
 
-          <div className='rounded-md border border-red-300 p-3'>
-            <p className='text-sm font-medium text-red-700'>
+          <div className='rounded-md border border-red-300 p-3 dark:border-red-700'>
+            <p className='text-sm font-medium text-red-700 dark:text-red-500'>
               Type <span className='font-bold'>DELETE</span> to confirm
               permanent account deletion.
             </p>
@@ -350,7 +358,7 @@ export default function UpdateProfileClient({
 
             <button
               type='button'
-              className='mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
+              className='mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-60'
               disabled={isPending || !canDelete}
               onClick={() => {
                 startTransition(async () => {

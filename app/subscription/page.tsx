@@ -49,9 +49,11 @@ export default async function SubscriptionPage() {
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Subscription</h1>
-        <p className='mt-1 text-sm text-slate-600'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800'>
+        <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
+          Subscription
+        </h1>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
           Choose a plan that fits your learning pace.
         </p>
       </section>
@@ -60,20 +62,22 @@ export default async function SubscriptionPage() {
         {plans.map((plan) => (
           <article
             key={plan.id}
-            className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
+            className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800'
           >
-            <h2 className='text-lg font-semibold text-slate-900'>
+            <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
               {plan.name}
             </h2>
-            <p className='mt-1 text-sm text-slate-600'>{plan.price}</p>
-            <ul className='mt-4 space-y-2 text-sm text-slate-700'>
+            <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
+              {plan.price}
+            </p>
+            <ul className='mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-400'>
               {plan.features.map((f) => (
                 <li key={f}>• {f}</li>
               ))}
             </ul>
             <button
               type='button'
-              className='mt-5 inline-flex rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800'
+              className='mt-5 inline-flex rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
             >
               Select {plan.name}
             </button>
@@ -81,11 +85,11 @@ export default async function SubscriptionPage() {
         ))}
       </section>
 
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h3 className='text-base font-semibold text-slate-900'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800'>
+        <h3 className='text-base font-semibold text-slate-900 dark:text-white'>
           Your learning snapshot
         </h3>
-        <div className='mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='mt-3 grid gap-3 text-sm text-slate-700 dark:text-slate-400 sm:grid-cols-2 lg:grid-cols-4'>
           <p>
             <span className='font-medium'>User:</span>{' '}
             {user?.fullName || user?.username || user?.email || 'N/A'}
@@ -105,7 +109,7 @@ export default async function SubscriptionPage() {
         </div>
         <Link
           href='/quiz'
-          className='mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50'
+          className='mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700'
         >
           Continue practicing
         </Link>

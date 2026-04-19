@@ -22,7 +22,7 @@ type LeaderboardRow = {
 function Avatar({ src, name }: { src: string; name: string }) {
   if (!src) {
     return (
-      <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'>
+      <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-700 dark:text-slate-400'>
         {name
           .split(' ')
           .filter(Boolean)
@@ -35,7 +35,7 @@ function Avatar({ src, name }: { src: string; name: string }) {
   }
 
   return (
-    <div className='relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+    <div className='relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'>
       <Image
         src={src}
         alt={`${name} avatar`}
@@ -99,22 +99,24 @@ export default async function LeaderboardPage() {
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Leaderboard</h1>
-        <p className='mt-1 text-sm text-slate-600'>
+      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900'>
+        <h1 className='text-2xl font-bold text-slate-900 dark:text-slate-50'>
+          Leaderboard
+        </h1>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-300'>
           Weekly standings ({period}). Ranked by total score.
         </p>
       </section>
 
-      <section className='overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm'>
+      <section className='overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'>
         {data.length === 0 ? (
-          <div className='p-8 text-center text-sm text-slate-600'>
+          <div className='p-8 text-center text-sm text-slate-600 dark:text-slate-300'>
             No leaderboard entries yet this week.
           </div>
         ) : (
           <div className='overflow-x-auto'>
             <table className='w-full min-w-190'>
-              <thead className='bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500'>
+              <thead className='bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300'>
                 <tr>
                   <th className='px-4 py-3'>Rank</th>
                   <th className='px-4 py-3'>User</th>
@@ -129,15 +131,15 @@ export default async function LeaderboardPage() {
                 {data.map((row) => (
                   <tr
                     key={row.id}
-                    className='border-t border-slate-100 text-sm text-slate-700'
+                    className='border-t border-slate-100 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300'
                   >
-                    <td className='px-4 py-3 font-semibold text-slate-900'>
+                    <td className='px-4 py-3 font-semibold text-slate-900 dark:text-slate-50'>
                       #{row.rank}
                     </td>
                     <td className='px-4 py-3'>
                       <div className='flex items-center gap-3'>
                         <Avatar src={row.avatar} name={row.userName} />
-                        <span className='font-medium text-slate-900'>
+                        <span className='font-medium text-slate-900 dark:text-slate-50'>
                           {row.userName}
                         </span>
                       </div>

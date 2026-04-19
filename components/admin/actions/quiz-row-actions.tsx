@@ -59,7 +59,7 @@ export default function QuizRowActions({ quizId, initialPublished }: Props) {
       <button
         onClick={togglePublish}
         disabled={loading !== null}
-        className='rounded-md border px-3 py-1 text-xs hover:bg-slate-50 disabled:opacity-50'
+        className='rounded-md border px-3 py-1 text-xs dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 disabled:opacity-50'
       >
         {loading === 'toggle'
           ? 'Saving...'
@@ -71,7 +71,7 @@ export default function QuizRowActions({ quizId, initialPublished }: Props) {
       <button
         onClick={deleteQuiz}
         disabled={loading !== null}
-        className='rounded-md border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50'
+        className='rounded-md border border-red-300 px-3 py-1 text-xs text-red-700 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950 disabled:opacity-50'
       >
         {loading === 'delete' ? 'Deleting...' : 'Delete'}
       </button>

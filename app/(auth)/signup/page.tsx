@@ -64,7 +64,7 @@ export default function SignUpPage() {
 
       <form onSubmit={handleSignup} className='space-y-3'>
         <input
-          className='w-full rounded border p-2'
+          className='w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Email'
           type='email'
           autoComplete='email'
@@ -74,7 +74,7 @@ export default function SignUpPage() {
           disabled={loading}
         />
         <input
-          className='w-full rounded border p-2'
+          className='w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Username'
           autoComplete='username'
           value={form.username}
@@ -82,7 +82,7 @@ export default function SignUpPage() {
           disabled={loading}
         />
         <input
-          className='w-full rounded border p-2'
+          className='w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Full Name'
           autoComplete='name'
           value={form.fullName}
@@ -90,7 +90,7 @@ export default function SignUpPage() {
           disabled={loading}
         />
         <input
-          className='w-full rounded border p-2'
+          className='w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Password'
           type='password'
           autoComplete='new-password'

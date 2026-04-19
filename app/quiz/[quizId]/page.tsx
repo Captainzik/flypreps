@@ -56,18 +56,18 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+      <section className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-6 shadow-sm'>
         <div className='flex flex-wrap items-start justify-between gap-3'>
           <div>
-            <h1 className='text-2xl font-bold text-slate-900'>{quiz.name}</h1>
-            <p className='mt-1 text-sm text-slate-600'>{quiz.category}</p>
+            <h1 className='text-2xl font-bold dark:text-white'>{quiz.name}</h1>
+            <p className='mt-1 text-sm dark:text-slate-400'>{quiz.category}</p>
           </div>
 
           <div className='flex flex-wrap gap-2'>
             {quiz.tags?.map((tag) => (
               <span
                 key={tag}
-                className='rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700'
+                className='rounded-full dark:bg-slate-700 px-2.5 py-1 text-xs font-medium dark:text-slate-300'
               >
                 {tag}
               </span>
@@ -85,20 +85,24 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           </div>
         ) : null}
 
-        <p className='mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700'>
+        <p className='mt-4 whitespace-pre-wrap text-sm leading-6 dark:text-slate-300'>
           {quiz.description}
         </p>
 
         <div className='mt-5 grid gap-3 sm:grid-cols-2'>
-          <div className='rounded-lg bg-slate-50 p-4'>
-            <p className='text-xs text-slate-500'>Total questions</p>
-            <p className='text-lg font-semibold text-slate-900'>
+          <div className='rounded-lg dark:bg-slate-700 p-4'>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Total questions
+            </p>
+            <p className='text-lg font-semibold text-slate-900 dark:text-white'>
               {questionCount}
             </p>
           </div>
-          <div className='rounded-lg bg-slate-50 p-4'>
-            <p className='text-xs text-slate-500'>Published questions</p>
-            <p className='text-lg font-semibold text-slate-900'>
+          <div className='rounded-lg bg-slate-50 dark:bg-slate-700 p-4'>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Published questions
+            </p>
+            <p className='text-lg font-semibold text-slate-900 dark:text-white'>
               {publishedQuestionCount}
             </p>
           </div>
@@ -108,7 +112,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           {canStart ? (
             <Link
               href={`/quiz/${quiz._id.toString()}/start`}
-              className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
+              className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
             >
               Start quiz
             </Link>
@@ -116,7 +120,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
             <button
               type='button'
               disabled
-              className='inline-flex items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white'
+              className='inline-flex items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white dark:bg-slate-700 dark:text-slate-400'
             >
               Quiz unavailable
             </button>
@@ -124,7 +128,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
           <Link
             href='/quiz/start'
-            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50'
+            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
           >
             Back to quizzes
           </Link>

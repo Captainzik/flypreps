@@ -132,8 +132,10 @@ export default function NewQuizPage() {
 
   return (
     <main className='space-y-4'>
-      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
-        <h1 className='text-xl font-semibold'>New Quiz</h1>
+      <div className='flex items-center justify-between rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'>
+        <h1 className='text-xl font-semibold text-slate-900 dark:text-white'>
+          New Quiz
+        </h1>
         <Link
           href='/admin/quizzes'
           className='rounded border px-3 py-1 text-sm'
@@ -144,7 +146,7 @@ export default function NewQuizPage() {
 
       <form
         onSubmit={onSubmit}
-        className='space-y-4 rounded-xl border bg-white p-4 shadow-sm'
+        className='space-y-4 rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'
       >
         <div className='space-y-2'>
           <label className='text-sm font-medium'>Name</label>
@@ -154,7 +156,7 @@ export default function NewQuizPage() {
             required
             minLength={3}
             maxLength={100}
-            className='w-full rounded border px-3 py-2'
+            className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
           />
         </div>
 
@@ -167,7 +169,7 @@ export default function NewQuizPage() {
             minLength={10}
             maxLength={2000}
             rows={5}
-            className='w-full rounded border px-3 py-2'
+            className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
           />
         </div>
 
@@ -177,7 +179,7 @@ export default function NewQuizPage() {
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder='https://...'
-            className='w-full rounded border px-3 py-2'
+            className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
           />
         </div>
 
@@ -187,7 +189,7 @@ export default function NewQuizPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as QuizCategory)}
-              className='w-full rounded border px-3 py-2'
+              className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
             >
               {QUIZ_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -203,7 +205,7 @@ export default function NewQuizPage() {
               {QUIZ_TAGS.map((tag) => (
                 <label
                   key={tag}
-                  className='inline-flex items-center gap-2 rounded border px-3 py-2 text-sm'
+                  className='inline-flex items-center gap-2 rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm'
                 >
                   <input
                     type='checkbox'
@@ -233,7 +235,7 @@ export default function NewQuizPage() {
               {questions.map((q) => (
                 <label
                   key={q._id}
-                  className='flex cursor-pointer items-start gap-2 rounded border p-2 hover:bg-slate-50'
+                  className='flex cursor-pointer items-start gap-2 rounded border dark:border-slate-700 dark:bg-slate-800 p-2 hover:bg-slate-50 dark:hover:bg-slate-700'
                 >
                   <input
                     type='checkbox'
@@ -242,8 +244,10 @@ export default function NewQuizPage() {
                     className='mt-1'
                   />
                   <div>
-                    <p className='text-sm font-medium'>{q.question}</p>
-                    <p className='text-xs text-slate-500'>
+                    <p className='text-sm font-medium text-slate-900 dark:text-white'>
+                      {q.question}
+                    </p>
+                    <p className='text-xs text-slate-500 dark:text-slate-400'>
                       Quiz: {q.quizName ?? 'N/A'} • Published:{' '}
                       {q.isPublished ? 'Yes' : 'No'}
                     </p>

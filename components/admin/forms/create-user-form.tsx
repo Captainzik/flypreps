@@ -69,7 +69,7 @@ export default function CreateUserForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className='space-y-3 rounded-xl border bg-white p-4 shadow-sm'
+      className='space-y-3 rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'
     >
       <input
         name='email'
@@ -78,7 +78,7 @@ export default function CreateUserForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder='Email'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
@@ -86,7 +86,7 @@ export default function CreateUserForm() {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         placeholder='Username (optional)'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
@@ -94,7 +94,7 @@ export default function CreateUserForm() {
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         placeholder='Full name (optional)'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
@@ -105,7 +105,7 @@ export default function CreateUserForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder='Password'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
@@ -113,7 +113,7 @@ export default function CreateUserForm() {
         value={avatar}
         onChange={(e) => setAvatar(e.target.value)}
         placeholder='Avatar URL (optional)'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <div className='flex items-center gap-3'>
@@ -121,7 +121,7 @@ export default function CreateUserForm() {
           name='role'
           value={role}
           onChange={(e) => setRole(e.target.value as Role)}
-          className='rounded border px-3 py-2'
+          className='rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
         >
           <option value='user'>user</option>
           <option value='moderator'>moderator</option>

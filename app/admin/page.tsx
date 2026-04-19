@@ -21,9 +21,11 @@ const cards = [
 export default function AdminPage() {
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Admin Dashboard</h1>
-        <p className='mt-1 text-sm text-slate-600'>
+      <section className='rounded-xl border dark:border-slate-700 dark:bg-slate-950 p-6 shadow-sm'>
+        <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
+          Admin Dashboard
+        </h1>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
           Manage quizzes, questions, and users from one place.
         </p>
       </section>
@@ -33,10 +35,14 @@ export default function AdminPage() {
           <Link
             key={card.href}
             href={card.href}
-            className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md'
+            className='rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 p-5 shadow-sm transition hover:shadow-md'
           >
-            <h2 className='font-semibold text-slate-900'>{card.title}</h2>
-            <p className='mt-1 text-sm text-slate-600'>{card.description}</p>
+            <h2 className='font-semibold text-slate-900 dark:text-white'>
+              {card.title}
+            </h2>
+            <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
+              {card.description}
+            </p>
           </Link>
         ))}
       </section>

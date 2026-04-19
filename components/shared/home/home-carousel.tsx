@@ -33,7 +33,7 @@ export function HomeCarousel({
         {items.map((item) => (
           <CarouselItem key={item.title}>
             <Link href={item.url} className='block'>
-              <div className='relative aspect-video overflow-hidden rounded-xl sm:aspect-16/7 lg:aspect-16/6'>
+              <div className='relative aspect-video overflow-hidden rounded-xl bg-slate-100 shadow-sm sm:aspect-16/7 lg:aspect-16/6 dark:bg-slate-900'>
                 <Image
                   src={item.image}
                   alt={item.title}

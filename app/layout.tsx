@@ -5,6 +5,7 @@ import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from '@/lib/constants'
 import AuthSessionProvider from '@/components/providers/session-provider'
 import ToasterProvider from '@/components/providers/toaster-provider'
 import Header from '@/components/shared/header'
+import ThemeProvider from '@/components/providers/theme-provider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,17 +33,24 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-slate-900 antialiased transition-colors dark:bg-slate-950 dark:text-slate-50`}
       >
-        <AuthSessionProvider>
-          <div className='min-h-screen'>
-            <Header />
-            <main className='mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
-              {children}
-            </main>
-          </div>
-          <ToasterProvider />
-        </AuthSessionProvider>
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='system'
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthSessionProvider>
+            <div className='min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-50'>
+              <Header />
+              <main className='mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
+                {children}
+              </main>
+            </div>
+            <ToasterProvider />
+          </AuthSessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

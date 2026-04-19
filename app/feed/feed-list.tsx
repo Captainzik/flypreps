@@ -28,7 +28,7 @@ const PAGE_SIZE = 20
 function Avatar({ src, name }: { src: string; name: string }) {
   if (!src) {
     return (
-      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'>
+      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300'>
         {name
           .split(' ')
           .filter(Boolean)
@@ -41,7 +41,7 @@ function Avatar({ src, name }: { src: string; name: string }) {
   }
 
   return (
-    <div className='relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100'>
+    <div className='relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'>
       <Image
         src={src}
         alt={`${name} avatar`}
@@ -121,8 +121,8 @@ export default function FeedList({
 
   if (items.length === 0) {
     return (
-      <section className='rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center'>
-        <h2 className='text-lg font-semibold text-slate-900'>
+      <section className='rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900'>
+        <h2 className='text-lg font-semibold text-slate-900 dark:text-slate-50'>
           No activity yet
         </h2>
       </section>
@@ -134,12 +134,12 @@ export default function FeedList({
       {items.map((item) => (
         <article
           key={item.attemptId}
-          className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
+          className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900'
         >
           <div className='flex items-start gap-3'>
             <Avatar src={item.userAvatar} name={item.userName} />
-            <p className='text-sm text-slate-700'>
-              <span className='font-semibold text-slate-900'>
+            <p className='text-sm text-slate-700 dark:text-slate-300'>
+              <span className='font-semibold text-slate-900 dark:text-slate-50'>
                 {item.userName}
               </span>{' '}
               did <span className='font-semibold'>{item.quizName}</span>{' '}
@@ -147,7 +147,7 @@ export default function FeedList({
             </p>
           </div>
 
-          <div className='mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-3'>
+          <div className='mt-3 grid gap-2 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-3'>
             <p>
               <span className='font-medium'>Score:</span> {item.score}/
               {item.maxScore}
@@ -165,14 +165,14 @@ export default function FeedList({
           <div className='mt-4 flex gap-2'>
             <Link
               href={`/quiz/attempt/${item.attemptId}/result`}
-              className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800'
+              className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
             >
               View result
             </Link>
             {item.quizId ? (
               <Link
                 href={`/quiz/${item.quizId}`}
-                className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50'
+                className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
               >
                 Quiz details
               </Link>
@@ -184,13 +184,13 @@ export default function FeedList({
       <div ref={sentinelRef} />
 
       {loading ? (
-        <p className='py-3 text-center text-sm text-slate-500'>
+        <p className='py-3 text-center text-sm text-slate-500 dark:text-slate-400'>
           Loading more...
         </p>
       ) : null}
 
       {!hasMore ? (
-        <p className='py-3 text-center text-sm text-slate-500'>
+        <p className='py-3 text-center text-sm text-slate-500 dark:text-slate-400'>
           You reached the end of the feed.
         </p>
       ) : null}

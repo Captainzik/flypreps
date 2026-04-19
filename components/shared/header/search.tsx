@@ -21,7 +21,7 @@ export default function Search() {
       aria-label='Site search'
     >
       <Select name='category' defaultValue='all'>
-        <SelectTrigger className='h-full w-22 rounded-r-none rounded-l-md border-r bg-gray-100 text-black'>
+        <SelectTrigger className='h-full w-22 rounded-r-none rounded-l-md border-r border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white'>
           <SelectValue placeholder='All' />
         </SelectTrigger>
         <SelectContent position='popper'>
@@ -35,7 +35,7 @@ export default function Search() {
       </Select>
 
       <Input
-        className='h-full flex-1 rounded-none border-x-0 bg-gray-100 text-base text-black'
+        className='h-full flex-1 rounded-none border-x-0 border-slate-300 bg-slate-100 text-base text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white'
         placeholder={`Search ${APP_NAME}`}
         name='q'
         type='search'
@@ -44,7 +44,7 @@ export default function Search() {
 
       <button
         type='submit'
-        className='h-full rounded-l-none rounded-r-md bg-primary px-3 text-primary-foreground'
+        className='h-full rounded-l-none rounded-r-md bg-slate-900 px-3 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
         aria-label='Submit search'
       >
         <SearchIcon className='h-5 w-5' />

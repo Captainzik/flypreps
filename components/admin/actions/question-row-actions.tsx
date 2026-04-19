@@ -34,7 +34,7 @@ export default function QuestionRowActions({ questionId }: Props) {
     <button
       onClick={deleteQuestion}
       disabled={loading}
-      className='rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50'
+      className='rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950'
     >
       {loading ? 'Deleting...' : 'Delete'}
     </button>

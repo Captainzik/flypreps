@@ -1,11 +1,10 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* @custom-variant dark (&:is(.dark *)); */
+@custom-variant dark (&:is(.dark *));
 
 @layer base {
   :root {
-    /* Design tokens (HSL values for utility usage like bg-[hsl(var(--background))]) */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -61,7 +60,6 @@
     --chart-5: 340 75% 55%;
   }
 
-  /* Better defaults for all devices */
   *,
   *::before,
   *::after {
@@ -81,7 +79,6 @@
     overflow-x: hidden;
   }
 
-  /* Media defaults for responsiveness */
   img,
   video,
   canvas,
@@ -98,7 +95,6 @@
     font: inherit;
   }
 
-  /* Prevent overflow issues on small screens */
   p,
   h1,
   h2,
@@ -109,7 +105,6 @@
     overflow-wrap: break-word;
   }
 
-  /* Focus visibility for keyboard users */
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
@@ -117,7 +112,6 @@
 }
 
 @layer utilities {
-  /* Use this on page wrappers for mobile-safe horizontal spacing */
   .container-app {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 lg:px-8;
   }
@@ -131,7 +125,7 @@
   }
 
   .header-button {
-    @apply cursor-pointer rounded-md border border-transparent p-2 transition-colors hover:border-white/80;
+    @apply cursor-pointer rounded-md border border-transparent p-2 transition-colors hover:border-white/80 dark:hover:border-slate-500;
   }
 
   .h1-bold {
@@ -146,7 +140,6 @@
     @apply text-[hsl(var(--muted-foreground))];
   }
 
-  /* Prevent accidental horizontal overflow from long content */
   .safe-wrap {
     @apply wrap-break-word;
   }

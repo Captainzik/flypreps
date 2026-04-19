@@ -40,7 +40,7 @@ export default function UserRoleForm({ userId, initialRole }: Props) {
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as Role)}
-        className='rounded border px-2 py-1'
+        className='rounded border px-2 py-1 dark:border-slate-600 dark:bg-slate-800 dark:text-white'
         disabled={loading}
       >
         <option value='user'>user</option>
@@ -50,7 +50,7 @@ export default function UserRoleForm({ userId, initialRole }: Props) {
       <button
         onClick={updateRole}
         disabled={loading}
-        className='rounded border px-3 py-1 disabled:opacity-50'
+        className='rounded border px-3 py-1 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300'
       >
         {loading ? 'Updating...' : 'Update'}
       </button>

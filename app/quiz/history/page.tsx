@@ -16,19 +16,21 @@ export default async function QuizHistoryPage() {
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h1 className='text-2xl font-bold text-slate-900'>Quiz History</h1>
-        <p className='mt-1 text-sm text-slate-600'>
+      <section className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-6 shadow-sm'>
+        <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
+          Quiz History
+        </h1>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
           Review your previous quiz attempts and performance.
         </p>
       </section>
 
       {history.length === 0 ? (
-        <section className='rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center'>
-          <h2 className='text-lg font-semibold text-slate-900'>
+        <section className='rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center'>
+          <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
             No attempts yet
           </h2>
-          <p className='mt-2 text-sm text-slate-600'>
+          <p className='mt-2 text-sm text-slate-600 dark:text-slate-400'>
             Start a quiz to build your history.
           </p>
           <Link
@@ -43,14 +45,14 @@ export default async function QuizHistoryPage() {
           {history.map((item) => (
             <article
               key={item.id}
-              className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
+              className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-5 shadow-sm'
             >
               <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div>
-                  <h2 className='text-base font-semibold text-slate-900'>
+                  <h2 className='text-base font-semibold text-slate-900 dark:text-white'>
                     {item.quizName}
                   </h2>
-                  <p className='mt-1 text-xs text-slate-500'>
+                  <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
                     {item.category || 'General'}
                   </p>
                 </div>
@@ -58,15 +60,15 @@ export default async function QuizHistoryPage() {
                 <span
                   className={`rounded-full px-2 py-1 text-xs font-medium ${
                     item.completed
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-amber-100 text-amber-700'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
                   }`}
                 >
                   {item.completed ? 'Completed' : 'In progress'}
                 </span>
               </div>
 
-              <div className='mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4'>
+              <div className='mt-4 grid gap-2 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2 lg:grid-cols-4'>
                 <p>
                   <span className='font-medium'>Score:</span> {item.score} /{' '}
                   {item.maxScore}
@@ -105,7 +107,7 @@ export default async function QuizHistoryPage() {
                 {item.quizId ? (
                   <Link
                     href={`/quiz/${item.quizId}`}
-                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50'
+                    className='inline-flex rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   >
                     Quiz details
                   </Link>

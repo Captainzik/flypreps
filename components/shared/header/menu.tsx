@@ -81,12 +81,12 @@ function LoggedInMenu({ isAdmin }: { isAdmin: boolean }) {
       >
         Leaderboard
       </Link>
-      <Link
+      {/**<Link
         href='/subscription'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'
       >
         Subscription
-      </Link>
+      </Link>*/}
       <Link
         href='/feed'
         className='header-button rounded-md px-2 py-1.5 text-sm sm:px-3'

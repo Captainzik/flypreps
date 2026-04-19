@@ -24,8 +24,10 @@ export default async function AdminUsersPage() {
 
   return (
     <main className='space-y-4'>
-      <div className='flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm'>
-        <h1 className='text-xl font-semibold'>Manage Users</h1>
+      <div className='flex items-center justify-between rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'>
+        <h1 className='text-xl font-semibold text-slate-900 dark:text-white'>
+          Manage Users
+        </h1>
         <Link
           href='/admin/users/new'
           className='rounded-lg bg-slate-900 px-4 py-2 text-sm text-white'
@@ -34,9 +36,9 @@ export default async function AdminUsersPage() {
         </Link>
       </div>
 
-      <div className='overflow-hidden rounded-xl border bg-white shadow-sm'>
+      <div className='overflow-hidden rounded-xl border dark:border-slate-700 dark:bg-slate-800 shadow-sm'>
         <table className='w-full text-sm'>
-          <thead className='bg-slate-50 text-left'>
+          <thead className='bg-slate-50 dark:bg-slate-700 text-left'>
             <tr>
               <th className='p-3'>Email</th>
               <th className='p-3'>Username</th>
@@ -48,7 +50,10 @@ export default async function AdminUsersPage() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u._id.toString()} className='border-t'>
+              <tr
+                key={u._id.toString()}
+                className='border-t dark:border-slate-700'
+              >
                 <td className='p-3'>{u.email}</td>
                 <td className='p-3'>{u.username ?? '—'}</td>
                 <td className='p-3'>{u.role}</td>

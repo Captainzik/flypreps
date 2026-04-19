@@ -9,7 +9,6 @@ type UserProfileRow = {
   username?: string
   fullName?: string
   avatar?: string
-  avatarStyle?: 'fun-emoji' | 'bottts' | 'adventurer' | 'avataaars'
 }
 
 export default async function UpdateProfilePage() {
@@ -21,7 +20,7 @@ export default async function UpdateProfilePage() {
   await connectToDatabase()
 
   const user = (await User.findById(session.user.id)
-    .select('email username fullName avatar avatarStyle')
+    .select('email username fullName avatar')
     .lean()) as UserProfileRow | null
 
   if (!user) {
@@ -35,7 +34,6 @@ export default async function UpdateProfilePage() {
       initialUsername={user.username ?? ''}
       initialFullName={user.fullName ?? ''}
       initialAvatar={user.avatar ?? ''}
-      initialAvatarStyle={user.avatarStyle ?? 'adventurer'}
     />
   )
 }

@@ -121,7 +121,7 @@ export default function EditUserForm({
   return (
     <form
       onSubmit={onSubmit}
-      className='space-y-3 rounded-xl border bg-white p-4 shadow-sm'
+      className='space-y-3 rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-4 shadow-sm'
     >
       <input
         name='email'
@@ -129,21 +129,21 @@ export default function EditUserForm({
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
         name='username'
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
         name='fullName'
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <input
@@ -151,7 +151,7 @@ export default function EditUserForm({
         value={avatar}
         onChange={(e) => setAvatar(e.target.value)}
         placeholder='https://...'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <div className='flex items-center gap-3'>
@@ -159,7 +159,7 @@ export default function EditUserForm({
           name='role'
           value={role}
           onChange={(e) => setRole(e.target.value as Role)}
-          className='rounded border px-3 py-2'
+          className='rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
         >
           <option value='user'>user</option>
           <option value='moderator'>moderator</option>
@@ -184,7 +184,7 @@ export default function EditUserForm({
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder='New password (optional)'
-        className='w-full rounded border px-3 py-2'
+        className='w-full rounded border dark:border-slate-700 dark:bg-slate-800 px-3 py-2'
       />
 
       <button

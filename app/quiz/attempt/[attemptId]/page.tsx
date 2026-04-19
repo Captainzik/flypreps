@@ -79,20 +79,22 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
 
   return (
     <main className='space-y-6'>
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
+      <section className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-6 shadow-sm'>
         <div className='flex items-center justify-between gap-3'>
-          <h1 className='text-xl font-bold text-slate-900'>
+          <h1 className='text-xl font-bold text-slate-900 dark:text-white'>
             {attempt.quiz.name}
           </h1>
-          <span className='rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700'>
+          <span className='rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300'>
             Question {answeredCount + 1} / {attempt.questions.length}
           </span>
         </div>
-        <p className='mt-1 text-sm text-slate-600'>{attempt.quiz.category}</p>
+        <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
+          {attempt.quiz.category}
+        </p>
       </section>
 
-      <section className='rounded-xl border border-slate-200 bg-white p-6 shadow-sm'>
-        <h2 className='text-lg font-semibold text-slate-900'>
+      <section className='rounded-xl border dark:border-slate-700 dark:bg-slate-800 p-6 shadow-sm'>
+        <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
           {currentQuestion.questionText}
         </h2>
 
@@ -120,7 +122,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
           {currentQuestion.options.map((opt: AttemptOption, idx: number) => (
             <label
               key={`${currentQuestion.questionId}-${idx}`}
-              className='flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50'
+              className='flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
             >
               <input
                 type='radio'
@@ -131,7 +133,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
               />
               <div className='space-y-2'>
                 {opt.text?.trim() ? (
-                  <span className='block text-sm text-slate-800'>
+                  <span className='block text-sm text-slate-800 dark:text-slate-300'>
                     {opt.text}
                   </span>
                 ) : null}
