@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, CheckCircle2, XCircle } from 'lucide-react'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(
@@ -124,5 +124,23 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className='mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4 py-8 sm:py-10'>
+          <div className='w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
+            <div className='h-8 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+            <div className='mt-3 h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+            <div className='mt-6 h-10 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+          </div>
+        </main>
+      }
+    >
+      <ForgotPasswordContent />
+    </Suspense>
   )
 }
