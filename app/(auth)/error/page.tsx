@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { Suspense, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const params = useSearchParams()
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
@@ -125,5 +125,23 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className='mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4 py-8 sm:py-10'>
+          <div className='w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
+            <div className='h-8 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+            <div className='mt-3 h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+            <div className='mt-6 h-10 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700' />
+          </div>
+        </main>
+      }
+    >
+      <AuthErrorContent />
+    </Suspense>
   )
 }
