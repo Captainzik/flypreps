@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import GoogleSignInButton from '@/components/auth/google-signin-button'
 import BackHomeButton from '@/components/auth/back-home-button'
 import { Button } from '@/components/ui/button'
@@ -23,6 +22,7 @@ export default function SignUpPage() {
   })
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
+  const [successMessage, setSuccessMessage] = useState<string>('') // CHANGED: success memo is shown inside the page instead of redirecting to auth error.
   const [passwordError, setPasswordError] = useState<string>('')
   const [emailError, setEmailError] = useState<string>('')
   // CHANGED: field-level errors allow users to see exactly which input needs attention.
@@ -63,6 +63,7 @@ export default function SignUpPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMessage('') // CHANGED: clear any previous success memo before a new submit.
 
     const isValid = validateForm()
     if (!isValid) {
@@ -77,20 +78,28 @@ export default function SignUpPage() {
         body: JSON.stringify(form),
       })
 
-      const data: { message?: string } = await res.json()
+      const data: { success?: boolean; message?: string } = await res.json() // CHANGED: read the API response shape so the UI can show friendly status messages.
 
-      if (!res.ok) {
+      if (!res.ok || !data.success) {
         setError(data?.message || 'Signup failed')
         setLoading(false)
         return
       }
 
-      // Keep redirect behavior consistent across auth flows
-      await signIn('credentials', {
-        email: form.email,
-        password: form.password,
-        callbackUrl: '/',
-      })
+      setSuccessMessage(
+        data.message ||
+          'Account created. Check your inbox to verify your email.',
+      ) // CHANGED: show the signup success memo directly in the page.
+
+      setForm({
+        email: '',
+        username: '',
+        fullName: '',
+        password: '',
+      }) // CHANGED: clear form after successful signup so the page clearly reflects completion.
+
+      setLoading(false) // CHANGED: stop loading on success instead of calling signIn().
+      return // CHANGED: do not auto sign in here; verification email flow should complete first.
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
@@ -122,7 +131,6 @@ export default function SignUpPage() {
             </p>
           ) : null}
         </div>
-
         <input
           className='w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Username'
@@ -131,7 +139,6 @@ export default function SignUpPage() {
           onChange={(e) => setForm((s) => ({ ...s, username: e.target.value }))}
           disabled={loading}
         />
-
         <input
           className='w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
           placeholder='Full Name'
@@ -140,7 +147,6 @@ export default function SignUpPage() {
           onChange={(e) => setForm((s) => ({ ...s, fullName: e.target.value }))}
           disabled={loading}
         />
-
         <div>
           <input
             className='w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400'
@@ -160,9 +166,15 @@ export default function SignUpPage() {
             </p>
           ) : null}
         </div>
-
-        {error ? <p className='text-sm text-red-600'>{error}</p> : null}
-
+        {error ? (
+          <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
+        ) : null}
+        {successMessage ? (
+          <p className='rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'>
+            {successMessage}
+          </p>
+        ) : null}{' '}
+        {/* CHANGED: friendly success memo replaces generic auth error redirect. */}
         <Button type='submit' className='w-full' disabled={loading}>
           {loading ? 'Creating...' : 'Create account'}
         </Button>

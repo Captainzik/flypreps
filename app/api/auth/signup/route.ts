@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         fullName: user.fullName,
       })
     } catch (emailError) {
-      // CHANGED: if email delivery fails, the signup should surface the real issue instead of pretending the message was sent.
+      // CHANGED: if email delivery fails, remove the newly-created account so signup does not appear successful.
       await EmailToken.deleteMany({
         user: user._id,
         purpose: 'verify-email',
