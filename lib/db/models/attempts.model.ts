@@ -1,17 +1,39 @@
 import { HydratedDocument, Model, model, models, Schema, Types } from 'mongoose'
+import type {
+  QuizMode,
+  ResultVisibility,
+  SessionStatus,
+} from '@/lib/modes/types' // CHANGED: attempts now explicitly track mode and timer-driven session status.
 
 export interface IQuizAttempt {
   user: Types.ObjectId
   quiz: Types.ObjectId
+  mode: QuizMode // CHANGED: exam and CPD attempts have different behavior.
+  status: SessionStatus // CHANGED: enables paused/resumed/completed flow.
+  resultVisibility: ResultVisibility // CHANGED: exam hides results until completion.
   startedAt: Date
   completedAt?: Date
+  pausedAt?: Date
+  resumedAt?: Date
+  endedAt?: Date
   timeTakenMs?: number
+  questionTimeLimitMs?: number // CHANGED: stored for exam-mode timer enforcement.
+  checkpointDeadlineMs?: number // CHANGED: stored for checkpoint/break timing logic.
+  timedOut?: boolean // CHANGED: indicates forced exam completion on timeout.
+  forceCompletedByTimeout?: boolean // CHANGED: indicates quiz was finalized because time expired.
   score: number
   maxScore: number
   percentage: number
   attemptKey?: string
   completed: boolean
   questionsAnswered: number
+  currentQuestionIndex: number // CHANGED: exact current position for resume.
+  checkpointIndex: number // CHANGED: exact checkpoint position for resume/break.
+  checkpointSavedAt?: Date
+  adsServedCount: number
+  heartsConsumed: number
+  gemsEarned: number
+  xpEarned: number
   answers: {
     question: Types.ObjectId
     selectedOptionIndex?: number
@@ -40,6 +62,26 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       required: true,
       index: true,
     },
+    mode: {
+      type: String,
+      enum: ['exam', 'cpd'],
+      required: true,
+      default: 'cpd',
+      index: true,
+    },
+    status: {
+      type: String,
+      enum: ['in_progress', 'paused', 'completed', 'ended', 'abandoned'],
+      required: true,
+      default: 'in_progress',
+      index: true,
+    },
+    resultVisibility: {
+      type: String,
+      enum: ['hidden_until_end', 'per_question'],
+      required: true,
+      default: 'per_question',
+    },
     startedAt: {
       type: Date,
       required: true,
@@ -49,9 +91,37 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       type: Date,
       index: true,
     },
+    pausedAt: {
+      type: Date,
+      index: true,
+    },
+    resumedAt: {
+      type: Date,
+      index: true,
+    },
+    endedAt: {
+      type: Date,
+      index: true,
+    },
     timeTakenMs: {
       type: Number,
       min: 0,
+    },
+    questionTimeLimitMs: {
+      type: Number,
+      min: 0,
+    },
+    checkpointDeadlineMs: {
+      type: Number,
+      min: 0,
+    },
+    timedOut: {
+      type: Boolean,
+      default: false,
+    },
+    forceCompletedByTimeout: {
+      type: Boolean,
+      default: false,
     },
     score: {
       type: Number,
@@ -80,6 +150,39 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       index: true,
     },
     questionsAnswered: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    currentQuestionIndex: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    checkpointIndex: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    checkpointSavedAt: {
+      type: Date,
+    },
+    adsServedCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    heartsConsumed: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    gemsEarned: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    xpEarned: {
       type: Number,
       min: 0,
       default: 0,
@@ -132,6 +235,7 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
 QuizAttemptSchema.index({ user: 1, quiz: 1 })
 QuizAttemptSchema.index({ quiz: 1, completed: 1, score: -1 })
 QuizAttemptSchema.index({ user: 1, completedAt: -1 })
+QuizAttemptSchema.index({ user: 1, mode: 1, status: 1 })
 QuizAttemptSchema.index(
   { user: 1, quiz: 1, attemptKey: 1 },
   { unique: true, sparse: true },

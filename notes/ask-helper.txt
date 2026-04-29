@@ -1,3 +1,24 @@
 Do not change any code without explanation or inline comments. 
-Give me full typed files based on my existing structure and recent code/file modifications not placeholders and inline comments on the exact changed lines/code.
+Give me full typed files based on my existing structure and recent code/file modifications not placeholders and inline 
+comments on the exact changed lines/code.
 Also make sure codes are mobile responsive and responsive to darkmode theme.
+
+
+
+
+If you want, I can next give you:
+
+the updated lib/actions/user.actions.ts to wire wallet defaults into new users,
+the reward service actions for hearts/gems/XP, or
+
+
+Important note
+These audio files reference paths like:
+
+/audio/correct.mp3
+/audio/wrong.mp3
+So make sure your public/audio/ folder contains those files.
+
+
+
+

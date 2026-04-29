@@ -206,3 +206,78 @@ If you want, I can next help you create:
 
 a complete data model/schema for this system, or
 a recommended folder structure + migration plan based on your current Radpreps app.
+
+
+What to add for sounds
+You should treat sound as another shared system, not part of quiz scoring.
+
+Sound types to support
+correct answer sound
+wrong answer sound
+streak achieved sound
+badge unlocked sound
+level up sound
+heart lost sound
+heart refilled sound
+ad reward sound
+quiz complete sound
+checkpoint saved sound
+mode-specific ambience or cue sounds
+Recommended structure update
+Add a new domain:
+
+txt
+lib/audio/
+And maybe:
+
+txt
+components/audio/
+Example files
+lib/audio/types.ts
+lib/audio/sounds.ts
+lib/audio/player.ts
+lib/audio/sound-events.ts
+Why this is important
+If you hardcode audio into quiz components, it will get messy fast.
+
+Instead:
+
+quiz or gamification logic emits an event
+audio layer listens and plays the correct sound
+UI stays clean
+Suggested approach
+Use a small sound event map like:
+
+answer_correct
+answer_wrong
+streak_up
+badge_unlock
+level_up
+heart_loss
+heart_refill
+reward_claim
+quiz_complete
+checkpoint_saved
+Then in both exam and cpd modes, the app can trigger different sounds depending on the event.
+
+Mode-specific sound behavior
+Exam mode
+subtle, less frequent
+checkpoint/save cue
+completion cue
+warning sound when hearts run low
+CPD mode
+more lively
+correct/wrong feedback
+reward sounds
+streak sounds
+badge unlocks
+level-up sounds
+Recommendation
+Yes, include sounds, but keep them:
+
+centralized
+event-driven
+optional to disable in settings
+mobile-friendly
+not too noisy

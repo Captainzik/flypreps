@@ -9,6 +9,13 @@ import type { IQuestion } from '../db/models/question.model'
 import { SubmitQuizAttemptWithKeySchema } from '@/lib/validator'
 import type { ISubmitQuizAttemptInput } from '@/types'
 import { upsertLeaderboardFromAttempt } from '@/lib/actions/leaderboard.actions'
+import { getModeRules } from '@/lib/modes/rules' // CHANGED: attempt flow now respects exam vs CPD behavior.
+import {
+  getElapsedMs,
+  shouldForceExamTimeout,
+  getActiveAttemptTimerState,
+} from '@/lib/learning/timing' // CHANGED: active UI timer is only derived for exam mode.
+import { buildAudioEventEnvelope } from '@/lib/actions/audio.actions' // CHANGED: audio is emitted as events, not played in this layer.
 
 // Ensure referenced models are registered in serverless runtime before populate()
 import '@/lib/db/models/question.model'
@@ -26,10 +33,40 @@ const isMongoDuplicateKeyError = (err: unknown): err is { code: number } => {
   )
 }
 
+function getAttemptMode(input: {
+  mode?: 'exam' | 'cpd'
+  quizCategory?: string
+}) {
+  return input.mode ?? (input.quizCategory === 'CPD' ? 'cpd' : 'exam')
+}
+
+function getResultVisibility(mode: 'exam' | 'cpd') {
+  return getModeRules(mode).resultVisibility
+}
+
+function computeAttemptXp(params: {
+  mode: 'exam' | 'cpd'
+  score: number
+  maxScore: number
+  percentage: number
+}) {
+  const rules = getModeRules(params.mode)
+  if (!rules.xpEnabled) return 0
+
+  const isPerfectScore = params.maxScore > 0 && params.score >= params.maxScore
+  const highScorer = params.percentage >= 80
+
+  const base = params.mode === 'exam' ? params.score * 2 : params.score * 10
+  const bonus = isPerfectScore ? 25 : highScorer ? 10 : 0
+
+  return base + bonus
+}
+
 export async function startQuizAttempt(input: {
   quizId: string
   userId: string
   attemptKey?: string
+  mode?: 'exam' | 'cpd'
 }) {
   await connectToDatabase()
 
@@ -44,6 +81,8 @@ export async function startQuizAttempt(input: {
     throw new Error('Quiz has no questions')
   }
 
+  const mode = getAttemptMode({ mode: input.mode, quizCategory: quiz.category })
+  const modeRules = getModeRules(mode)
   const answers: IQuizAttempt['answers'] = quiz.questions.map((qId) => ({
     question: qId,
     selectedOptionIndex: undefined,
@@ -52,23 +91,47 @@ export async function startQuizAttempt(input: {
     timeSpentMs: 0,
   }))
 
+  const now = new Date()
+  const questionTimeLimitMs = modeRules.questionTimeLimitSeconds
+    ? modeRules.questionTimeLimitSeconds * 1000
+    : undefined
+  const checkpointDeadlineMs = modeRules.checkpointIntervalMinutes
+    ? modeRules.checkpointIntervalMinutes * 60_000
+    : undefined
+
   const attempt = await QuizAttempt.create({
     user: userId,
     quiz: quiz._id,
+    mode,
+    status: 'in_progress',
+    resultVisibility: getResultVisibility(mode),
     attemptKey:
       attemptKey ||
       `attempt_${userId}_${quizId}_${Date.now()}_${Math.random()
         .toString(36)
         .slice(2, 10)}`,
-    startedAt: new Date(),
+    startedAt: now,
     completed: false,
     score: 0,
-    maxScore: quiz.questions.length * 10,
+    maxScore: quiz.questions.length * (mode === 'exam' ? 2 : 10),
     percentage: 0,
     questionsAnswered: 0,
+    currentQuestionIndex: 0,
+    checkpointIndex: 0,
+    checkpointSavedAt: now,
+    questionTimeLimitMs,
+    checkpointDeadlineMs,
+    timedOut: false,
+    forceCompletedByTimeout: false,
+    adsServedCount: 0,
+    heartsConsumed: 0,
+    gemsEarned: 0,
+    xpEarned: 0,
     answers,
     category: quiz.category,
   })
+
+  void buildAudioEventEnvelope(userId, { type: 'mode_enter', mode }) // CHANGED: entering a mode can be consumed by client-side audio listeners.
 
   return attempt
 }
@@ -122,15 +185,30 @@ export async function getActiveQuizAttempt(params: {
     }
   })
 
+  const timerState = getActiveAttemptTimerState({
+    mode: attempt.mode,
+    startedAt: attempt.startedAt,
+    totalQuestions: Array.isArray(attempt.answers) ? attempt.answers.length : 0,
+  }) // CHANGED: only exam mode gets a live timer state for the UI.
+
   return {
     _id: attempt._id,
+    mode: attempt.mode,
+    status: attempt.status,
+    resultVisibility: attempt.resultVisibility,
+    startedAt: attempt.startedAt,
+    timeTakenMs: attempt.timeTakenMs,
+    questionTimeLimitMs: attempt.questionTimeLimitMs,
+    checkpointDeadlineMs: attempt.checkpointDeadlineMs,
+    showTimer: timerState.showTimer, // CHANGED: UI can read this to decide whether to render countdown.
+    timerState: timerState.showTimer ? timerState : undefined, // CHANGED: exam-only timer payload.
+    questions,
     quiz: {
       id: quizObj?._id?.toString?.() ?? '',
       name: quizObj?.name ?? 'Quiz',
       category: quizObj?.category ?? '',
       image: quizObj?.image ?? '',
     },
-    questions,
     answers: (attempt.answers || []).map((a) => ({
       questionId:
         (
@@ -177,7 +255,10 @@ export async function submitAnswerToAttempt(input: {
 
   attempt.answers[answerIndex].selectedOptionIndex = selectedOptionIndex
   attempt.answers[answerIndex].timeSpentMs = timeSpentMs
-
+  attempt.currentQuestionIndex = Math.min(
+    attempt.answers.length,
+    answerIndex + 1,
+  )
   attempt.questionsAnswered = attempt.answers.filter(
     (a) => typeof a.selectedOptionIndex === 'number',
   ).length
@@ -231,6 +312,8 @@ export async function submitQuizAttempt(
 
     if (!quiz) throw new Error('Quiz not found')
 
+    const mode = getAttemptMode({ quizCategory: quiz.category })
+    const modeRules = getModeRules(mode)
     const populatedQuestions = quiz.questions as unknown as IQuestion[]
     const quizQuestionIds = new Set(
       populatedQuestions
@@ -247,7 +330,7 @@ export async function submitQuizAttempt(
     }
 
     let score = 0
-    const maxScore = populatedQuestions.length * 10
+    const maxScore = populatedQuestions.length * (mode === 'exam' ? 2 : 10)
     const attemptAnswers: IQuizAttempt['answers'] = []
 
     for (const ans of payload.answers) {
@@ -268,7 +351,7 @@ export async function submitQuizAttempt(
           ? ans.selectedOptionIndex === correctOptionIndex
           : false
 
-      const pointsEarned = isCorrect ? 10 : 0
+      const pointsEarned = isCorrect ? (mode === 'exam' ? 2 : 10) : 0
       score += pointsEarned
 
       attemptAnswers.push({
@@ -278,22 +361,49 @@ export async function submitQuizAttempt(
         pointsEarned,
         timeSpentMs: ans.timeSpentMs,
       })
+
+      void buildAudioEventEnvelope(userId, {
+        type: isCorrect ? 'answer_correct' : 'answer_wrong',
+        mode,
+        questionId: ans.questionId,
+      }) // CHANGED: answer outcome is emitted only after real grading.
     }
 
     const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
+    const completedAt = new Date()
+    const timeTakenMs = payload.timeTakenMs ?? 0
 
     const attempt = new QuizAttempt({
       user: userId,
       quiz: payload.quizId,
+      mode,
+      status: 'completed',
+      resultVisibility: modeRules.resultVisibility,
       attemptKey: payload.attemptKey,
-      startedAt: new Date(),
-      completedAt: new Date(),
-      timeTakenMs: payload.timeTakenMs || 0,
+      startedAt: completedAt,
+      completedAt,
+      endedAt: undefined,
+      timeTakenMs,
+      questionTimeLimitMs: modeRules.questionTimeLimitSeconds
+        ? modeRules.questionTimeLimitSeconds * 1000
+        : undefined,
+      checkpointDeadlineMs: modeRules.checkpointIntervalMinutes
+        ? modeRules.checkpointIntervalMinutes * 60_000
+        : undefined,
+      timedOut: false,
+      forceCompletedByTimeout: false,
       score,
       maxScore,
       percentage,
       completed: true,
       questionsAnswered: attemptAnswers.length,
+      currentQuestionIndex: attemptAnswers.length,
+      checkpointIndex: attemptAnswers.length,
+      checkpointSavedAt: completedAt,
+      adsServedCount: 0,
+      heartsConsumed: 0,
+      gemsEarned: 0,
+      xpEarned: computeAttemptXp({ mode, score, maxScore, percentage }),
       answers: attemptAnswers,
       category: quiz.category,
     })
@@ -340,7 +450,11 @@ export async function submitQuizAttempt(
       await User.findByIdAndUpdate(
         userId,
         {
-          $inc: { lifetimeTotalScore: score },
+          $inc: {
+            lifetimeTotalScore: score,
+            xp: attempt.xpEarned,
+            leaguePoints: attempt.xpEarned,
+          },
           $set: {
             lastActive: new Date(),
             currentStreak: newStreak,
@@ -387,6 +501,13 @@ export async function submitQuizAttempt(
       { $set: { averagePercentage: computedAverage } },
       { session },
     )
+
+    void buildAudioEventEnvelope(userId, {
+      type: 'quiz_complete',
+      mode,
+      score,
+      percentage,
+    }) // CHANGED: quiz completion cue is emitted as an event envelope.
 
     await session.commitTransaction()
 
@@ -439,6 +560,7 @@ type CompleteQuizAttemptResult = {
   percentage: number
   completedAt: Date
   idempotentReplay: boolean
+  timeTakenMs?: number
 }
 
 export async function completeQuizAttempt(
@@ -468,6 +590,7 @@ export async function completeQuizAttempt(
         percentage: attempt.percentage,
         completedAt: attempt.completedAt ?? new Date(),
         idempotentReplay: true,
+        timeTakenMs: attempt.timeTakenMs,
       }
     }
 
@@ -482,6 +605,8 @@ export async function completeQuizAttempt(
 
     if (!quiz) throw new Error('Quiz not found')
 
+    const mode = attempt.mode || getAttemptMode({ quizCategory: quiz.category })
+    const modeRules = getModeRules(mode)
     const populatedQuestions = quiz.questions as unknown as IQuestion[]
     const questionMap = new Map(
       populatedQuestions
@@ -490,7 +615,7 @@ export async function completeQuizAttempt(
     )
 
     let score = 0
-    const maxScore = populatedQuestions.length * 10
+    const maxScore = populatedQuestions.length * (mode === 'exam' ? 2 : 10)
 
     const gradedAnswers = attempt.answers.map((ans) => {
       const q = questionMap.get(ans.question.toString())
@@ -507,7 +632,7 @@ export async function completeQuizAttempt(
         typeof ans.selectedOptionIndex === 'number' &&
         ans.selectedOptionIndex === correctOptionIndex
 
-      const pointsEarned = isCorrect ? 10 : 0
+      const pointsEarned = isCorrect ? (mode === 'exam' ? 2 : 10) : 0
       score += pointsEarned
 
       return { ...ans, isCorrect, pointsEarned }
@@ -515,6 +640,17 @@ export async function completeQuizAttempt(
 
     const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
     const completedAt = new Date()
+    const timeTakenMs = getElapsedMs(attempt.startedAt, completedAt) // CHANGED: uses the actual saved startedAt from the attempt record.
+
+    const forceTimeout =
+      mode === 'exam'
+        ? shouldForceExamTimeout({
+            mode,
+            startedAt: attempt.startedAt, // CHANGED: timeout is computed from the persisted attempt start time.
+            now: completedAt,
+            totalQuestions: populatedQuestions.length,
+          })
+        : false
 
     attempt.answers = gradedAnswers as IQuizAttempt['answers']
     attempt.score = score
@@ -522,8 +658,15 @@ export async function completeQuizAttempt(
     attempt.percentage = percentage
     attempt.completed = true
     attempt.completedAt = completedAt
+    attempt.timeTakenMs = timeTakenMs
+    attempt.status = forceTimeout ? 'ended' : 'completed'
+    attempt.endedAt = forceTimeout ? completedAt : attempt.endedAt
+    attempt.resultVisibility = modeRules.resultVisibility
+    attempt.timedOut = forceTimeout
+    attempt.forceCompletedByTimeout = forceTimeout
     attempt.questionsAnswered = gradedAnswers.length
     attempt.category = quiz.category
+    attempt.xpEarned = computeAttemptXp({ mode, score, maxScore, percentage })
 
     await attempt.save({ session })
 
@@ -566,7 +709,11 @@ export async function completeQuizAttempt(
       await User.findByIdAndUpdate(
         userId,
         {
-          $inc: { lifetimeTotalScore: score },
+          $inc: {
+            lifetimeTotalScore: score,
+            xp: attempt.xpEarned,
+            leaguePoints: attempt.xpEarned,
+          },
           $set: {
             lastActive: completedAt,
             currentStreak: newStreak,
@@ -590,6 +737,13 @@ export async function completeQuizAttempt(
       session,
     })
 
+    void buildAudioEventEnvelope(userId, {
+      type: 'quiz_complete',
+      mode,
+      score,
+      percentage,
+    }) // CHANGED: completion cue also applies when the attempt is finalized here.
+
     await session.commitTransaction()
 
     return {
@@ -599,6 +753,7 @@ export async function completeQuizAttempt(
       percentage,
       completedAt,
       idempotentReplay: false,
+      timeTakenMs,
     }
   } catch (error) {
     await session.abortTransaction()
@@ -679,6 +834,7 @@ export async function getQuizAttemptResult(params: {
     maxScore: attempt.maxScore,
     percentage: attempt.percentage,
     completedAt: attempt.completedAt,
+    timeTakenMs: attempt.timeTakenMs,
     answers,
   }
 }
@@ -694,6 +850,7 @@ export type QuizHistoryItem = {
   completed: boolean
   startedAt: Date
   completedAt?: Date
+  timeTakenMs?: number
   questionsAnswered: number
   totalQuestions: number
 }
@@ -738,6 +895,7 @@ export async function getUserQuizHistory(params: {
       completed: Boolean(attempt.completed),
       startedAt: attempt.startedAt,
       completedAt: attempt.completedAt,
+      timeTakenMs: attempt.timeTakenMs,
       questionsAnswered: attempt.questionsAnswered ?? 0,
       totalQuestions: Array.isArray(attempt.answers)
         ? attempt.answers.length
