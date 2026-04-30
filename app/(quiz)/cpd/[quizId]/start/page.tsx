@@ -24,7 +24,7 @@ export default async function QuizStartPage({ params }: PageProps) {
 
   const session = await auth()
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/${quizId}/start`)
+    redirect(`/signin?callbackUrl=/quiz/cpd/${quizId}/start`) // CHANGED: CPD-specific callback path.
   }
 
   const quiz = (await Quiz.findById(quizId)
@@ -40,5 +40,5 @@ export default async function QuizStartPage({ params }: PageProps) {
     userId: session.user.id,
   })
 
-  redirect(`/quiz/attempt/${attempt._id.toString()}`)
+  redirect(`/quiz/cpd/attempt/${attempt._id.toString()}`) // CHANGED: CPD-specific attempt route.
 }

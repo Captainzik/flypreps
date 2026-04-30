@@ -27,7 +27,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   const selectedOptionIndex = Number(selectedOptionIndexRaw)
 
   if (!questionId || Number.isNaN(selectedOptionIndex)) {
-    return NextResponse.redirect(new URL(`/quiz/attempt/${attemptId}`, req.url))
+    return NextResponse.redirect(
+      new URL(`/quiz/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific invalid-form fallback.
+    )
   }
 
   await submitAnswerToAttempt({
@@ -37,5 +39,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     selectedOptionIndex,
   })
 
-  return NextResponse.redirect(new URL(`/quiz/attempt/${attemptId}`, req.url))
+  return NextResponse.redirect(
+    new URL(`/quiz/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific post-submit redirect.
+  )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import type { QuizMode } from '@/lib/modes/types' // CHANGED: summary is mode-aware.
+import type { QuizMode } from '@/lib/modes/types' // CHANGED: summary remains mode-aware for exam/CPD behavior.
 import { getCompletionSummaryTimeLabel } from '@/lib/ui/quiz-timing'
 import { formatDuration } from '@/lib/learning/timing'
 import { BadgeCheck, Clock3, Trophy, TimerReset } from 'lucide-react'
@@ -16,6 +16,13 @@ type QuizResultSummaryProps = {
   totalQuestions?: number
   timedOut?: boolean
   forceCompletedByTimeout?: boolean
+  quiz: {
+    id: string
+    name: string
+    image?: string
+  }
+  correctCount: number
+  totalCount: number
 }
 
 export function QuizResultSummary({
@@ -29,6 +36,9 @@ export function QuizResultSummary({
   totalQuestions,
   timedOut,
   forceCompletedByTimeout,
+  quiz,
+  correctCount,
+  totalCount,
 }: QuizResultSummaryProps) {
   const completionTime = getCompletionSummaryTimeLabel({
     mode,
@@ -155,6 +165,40 @@ export function QuizResultSummary({
               ? 'Review your exam carefully and continue improving your timing.'
               : 'Use CPD feedback to reinforce learning and build consistency.'}
           </p>
+        </div>
+
+        {/* CHANGED: summary footer now surfaces quiz counts inside the shared component to reduce page duplication. */}
+        <div className='rounded-xl border border-slate-200 p-4 dark:border-slate-700 sm:col-span-3'>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='space-y-1'>
+              <div className='text-sm font-medium text-slate-700 dark:text-slate-200'>
+                Quiz overview
+              </div>
+              <p className='text-sm text-slate-600 dark:text-slate-300'>
+                {quiz.name}
+              </p>
+            </div>
+
+            <div className='grid grid-cols-2 gap-3 sm:min-w-[16rem]'>
+              <div className='rounded-lg bg-slate-50 px-3 py-2 text-center dark:bg-slate-800'>
+                <div className='text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+                  Correct
+                </div>
+                <div className='mt-1 text-base font-semibold text-slate-900 dark:text-white'>
+                  {correctCount}
+                </div>
+              </div>
+
+              <div className='rounded-lg bg-slate-50 px-3 py-2 text-center dark:bg-slate-800'>
+                <div className='text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+                  Total
+                </div>
+                <div className='mt-1 text-base font-semibold text-slate-900 dark:text-white'>
+                  {totalCount}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
