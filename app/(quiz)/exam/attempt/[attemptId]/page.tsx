@@ -1,10 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import {
-  getActiveQuizAttempt,
-  completeQuizAttempt,
-} from '@/lib/actions/quizAttempt.actions'
-import { QuizActiveAttempt } from '@/components/learning/quiz-active-attempt'
+import { completeQuizAttempt } from '@/lib/actions/quizAttempt.result'
+import { getActiveQuizAttempt } from '@/lib/actions/quizAttempt.active'
+import { QuizActiveAttemptShell } from '@/components/learning/quiz-active-attempt-shell'
 
 type PageProps = {
   params: Promise<{
@@ -73,8 +71,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   }
 
   return (
-    <QuizActiveAttempt
-      attemptId={attemptId}
+    <QuizActiveAttemptShell
       mode={attempt.mode}
       startedAt={attempt.startedAt}
       quizName={attempt.quiz.name}
@@ -82,6 +79,8 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       questionNumber={answeredCount + 1}
       totalQuestions={attempt.questions.length}
       question={currentQuestion}
+      action={`/quiz/exam/attempt/${attemptId}/answer`} // CHANGED: exam-specific answer endpoint.
+      showTimer={attempt.mode === 'exam'}
     />
   )
 }
