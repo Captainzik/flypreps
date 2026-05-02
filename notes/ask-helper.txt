@@ -14,13 +14,8 @@ Those should be fully removed now.
 
 If you want, I can do one more pass and point out the remaining files likely still using old category-based mode logic.
 
-Best practice here
-For a clean reset, keep the code strict and explicit:
+If you want, I can now help you find any remaining references to submitQuizAttempt or /api/attempts/submit so you can remove them cleanly.
 
-required fields remain required
-no compatibility branches
-no legacy semantics hidden in fallbacks
-If you want, I can help you do a final cleanup audit of the quiz/attempt flow to remove any other leftover fallback or legacy checks.
 
 Repo: Captainzik/radpreps
 Branch: staging

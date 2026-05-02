@@ -185,32 +185,6 @@ export const ResetPasswordSchema = z
     path: ['confirmPassword'],
   })
 
-export const SubmitQuizAttemptSchema = z.object({
-  quizId: MongoId,
-  answers: z
-    .array(
-      z.object({
-        questionId: MongoId,
-        selectedOptionIndex: z.number().int().min(0).max(3).optional(),
-        timeSpentMs: z.number().min(0).optional(),
-      }),
-    )
-    .min(1, 'At least one answer required')
-    .refine(
-      (answers) =>
-        new Set(answers.map((a) => a.questionId)).size === answers.length,
-      { message: 'Duplicate question answers are not allowed' },
-    ),
-  timeTakenMs: z.number().min(0).optional(),
-})
-
-export const SubmitQuizAttemptWithKeySchema = SubmitQuizAttemptSchema.extend({
-  attemptKey: z
-    .string()
-    .min(8, 'attemptKey too short')
-    .max(128, 'attemptKey too long'),
-})
-
 export const LeaderboardEntrySchema = z.object({
   _id: MongoId,
   period: z.string(),
