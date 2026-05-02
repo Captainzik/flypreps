@@ -198,7 +198,7 @@ export async function getQuizAttemptResult(params: {
   const quizObj = attempt.quiz as unknown as {
     _id: mongoose.Types.ObjectId
     name: string
-    category: string
+    category: 'Radiography' | 'Sonography'
     image?: string
   }
 

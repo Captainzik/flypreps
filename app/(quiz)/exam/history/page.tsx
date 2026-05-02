@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { getUserQuizHistory } from '@/lib/actions/quizAttempt.actions'
+import { getUserQuizHistory } from '@/lib/actions/quizAttempt.history'
 
-export default async function QuizHistoryPage() {
+export default async function ExamHistoryPage() {
   const session = await auth()
+
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/quiz/history')
+    redirect('/signin?callbackUrl=/exam/history') // CHANGED: exam-specific auth callback path.
   }
 
   const history = await getUserQuizHistory({
@@ -14,35 +15,37 @@ export default async function QuizHistoryPage() {
     limit: 100,
   })
 
+  const examHistory = history.filter((item) => item.category !== 'CPD') // CHANGED: history list is filtered to exam-mode attempts.
+
   return (
     <main className='space-y-4 sm:space-y-6'>
       <section className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
         <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
-          Quiz History
+          Exam History
         </h1>
         <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
-          Review your previous quiz attempts and performance.
+          Review your previous exam attempts and performance.
         </p>
       </section>
 
-      {history.length === 0 ? (
+      {examHistory.length === 0 ? (
         <section className='rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-800 sm:p-8'>
           <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
-            No attempts yet
+            No exam attempts yet
           </h2>
           <p className='mt-2 text-sm text-slate-600 dark:text-slate-400'>
-            Start a quiz to build your history.
+            Start an exam to build your history.
           </p>
           <Link
-            href='/quiz/start'
-            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
+            href='/exam/start'
+            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
           >
-            Start a quiz
+            Start an exam
           </Link>
         </section>
       ) : (
         <section className='space-y-3'>
-          {history.map((item) => (
+          {examHistory.map((item) => (
             <article
               key={item.id}
               className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5'
@@ -90,14 +93,14 @@ export default async function QuizHistoryPage() {
               <div className='mt-4 flex flex-wrap gap-2'>
                 {item.completed ? (
                   <Link
-                    href={`/quiz/attempt/${item.id}/result`}
+                    href={`/exam/attempt/${item.id}/result`}
                     className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     View result
                   </Link>
                 ) : (
                   <Link
-                    href={`/quiz/attempt/${item.id}`}
+                    href={`/exam/attempt/${item.id}`}
                     className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     Continue attempt
@@ -106,7 +109,7 @@ export default async function QuizHistoryPage() {
 
                 {item.quizId ? (
                   <Link
-                    href={`/quiz/${item.quizId}`}
+                    href={`/quiz/exam/${item.quizId}`}
                     className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                   >
                     Quiz details

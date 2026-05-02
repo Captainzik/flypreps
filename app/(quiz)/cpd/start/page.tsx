@@ -3,33 +3,35 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getStartableQuizzes } from '@/lib/actions/quiz.actions'
 
-export default async function QuizStartPage() {
+export default async function CpdStartPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/quiz/start')
+    redirect('/signin?callbackUrl=/cpd/start') // CHANGED: cpd-specific auth callback path.
   }
 
   const quizzes = await getStartableQuizzes()
+
+  const cpdQuizzes = quizzes.filter((quiz) => quiz.allowedModes.includes('cpd')) // CHANGED: only CPD quizzes belong in CPD mode.
 
   return (
     <main className='space-y-4 sm:space-y-6'>
       <section className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
         <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
-          Start a Quiz
+          Start CPD
         </h1>
         <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
-          Select a published quiz and begin your attempt.
+          Select a published quiz and begin a CPD-mode attempt.
         </p>
       </section>
 
-      {quizzes.length === 0 ? (
+      {cpdQuizzes.length === 0 ? (
         <section className='rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center dark:border-slate-600 dark:bg-slate-800 sm:p-8'>
           <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
-            No quizzes available yet
+            No CPD quizzes available yet
           </h2>
           <p className='mt-2 text-sm text-slate-600 dark:text-slate-400'>
-            Please check back later after quizzes are published.
+            Please check back later after CPD quizzes are published.
           </p>
           <Link
             href='/quiz'
@@ -40,7 +42,7 @@ export default async function QuizStartPage() {
         </section>
       ) : (
         <section className='grid gap-4 md:grid-cols-2'>
-          {quizzes.map((quiz) => {
+          {cpdQuizzes.map((quiz) => {
             const hasQuestions = quiz.questionsCount > 0
 
             return (
@@ -75,10 +77,10 @@ export default async function QuizStartPage() {
                 <div className='mt-4'>
                   {hasQuestions ? (
                     <Link
-                      href={`/quiz/${quiz._id}`}
+                      href={`/quiz/cpd/${quiz._id}`}
                       className='inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
                     >
-                      Start quiz
+                      Start CPD
                     </Link>
                   ) : (
                     <button
@@ -87,7 +89,7 @@ export default async function QuizStartPage() {
                       aria-disabled='true'
                       className='inline-flex w-full cursor-not-allowed items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-400'
                     >
-                      Start quiz
+                      Start CPD
                     </button>
                   )}
                 </div>

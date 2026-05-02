@@ -55,6 +55,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       update.description = payload.description
     if (payload.image !== undefined) update.image = payload.image || ''
     if (payload.category !== undefined) update.category = payload.category
+    if (payload.allowedModes !== undefined)
+      update.allowedModes = payload.allowedModes // CHANGED: save quiz availability modes separately from category.
     if (payload.tags !== undefined) update.tags = payload.tags
     if (payload.questions !== undefined) update.questions = payload.questions
     if (payload.isPublished !== undefined)

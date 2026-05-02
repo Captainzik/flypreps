@@ -23,18 +23,19 @@ type QuestionsResponse = {
   data?: QuestionRow[]
 }
 
-type QuizCategory = 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CPD'
-type QuizTag = 'Radiography' | 'Sonography'
+type QuizCategory = 'Radiography' | 'Sonography' // CHANGED: subject/category now matches the updated quiz model.
+type QuizMode = 'exam' | 'cpd' // CHANGED: quiz availability is controlled by allowedModes.
+type QuizTag = 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CCI'
 
-const QUIZ_CATEGORIES: QuizCategory[] = [
+const QUIZ_MODES: QuizMode[] = ['exam', 'cpd'] // CHANGED: used by the new allowedModes checkbox group.
+const QUIZ_CATEGORIES: QuizCategory[] = ['Radiography', 'Sonography']
+const QUIZ_TAGS: QuizTag[] = [
   'ARDMS',
   'Sonography Canada',
   'CAMRT',
   'ARRT',
-  'CPD',
+  'CCI',
 ]
-
-const QUIZ_TAGS: QuizTag[] = ['Radiography', 'Sonography']
 
 export default function NewQuizPage() {
   const router = useRouter()
@@ -42,7 +43,8 @@ export default function NewQuizPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState('')
-  const [category, setCategory] = useState<QuizCategory>('ARDMS')
+  const [category, setCategory] = useState<QuizCategory>('Radiography')
+  const [allowedModes, setAllowedModes] = useState<QuizMode[]>(['exam']) // CHANGED: quizzes can be shared across exam/CPD and must belong to at least one mode.
   const [tags, setTags] = useState<QuizTag[]>([])
   const [questionIds, setQuestionIds] = useState<string[]>([])
 
@@ -98,6 +100,12 @@ export default function NewQuizPage() {
     )
   }
 
+  function toggleAllowedMode(mode: QuizMode) {
+    setAllowedModes((prev) =>
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode],
+    )
+  } // CHANGED: added mode toggles so quizzes can be shared between exam and CPD.
+
   function toggleQuestion(id: string) {
     setQuestionIds((prev) =>
       prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id],
@@ -106,6 +114,11 @@ export default function NewQuizPage() {
 
   async function onSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
+
+    if (allowedModes.length === 0) {
+      alert('Please select at least one mode.')
+      return
+    } // CHANGED: quiz must belong to at least one mode.
 
     if (questionIds.length === 0) {
       alert('Please select at least one question.')
@@ -120,6 +133,7 @@ export default function NewQuizPage() {
         description: description.trim(),
         image: image.trim(),
         category,
+        allowedModes, // CHANGED: submit allowedModes instead of a single mode.
         tags,
         questions: questionIds,
       }
@@ -153,7 +167,7 @@ export default function NewQuizPage() {
         </h1>
         <Link
           href='/admin/quizzes'
-          className='rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700 dark:bg-slate-800'
+          className='rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
         >
           Back
         </Link>
@@ -164,19 +178,23 @@ export default function NewQuizPage() {
         className='space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800'
       >
         <div className='space-y-2'>
-          <label className='text-sm font-medium'>Name</label>
+          <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+            Name
+          </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             minLength={3}
             maxLength={100}
-            className='w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+            className='w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-100'
           />
         </div>
 
         <div className='space-y-2'>
-          <label className='text-sm font-medium'>Description</label>
+          <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -184,27 +202,31 @@ export default function NewQuizPage() {
             minLength={10}
             maxLength={2000}
             rows={5}
-            className='w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+            className='w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-100'
           />
         </div>
 
         <div className='space-y-2'>
-          <label className='text-sm font-medium'>Image URL (optional)</label>
+          <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+            Image URL (optional)
+          </label>
           <input
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder='https://...'
-            className='w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+            className='w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-100'
           />
         </div>
 
         <div className='grid gap-4 md:grid-cols-2'>
           <div className='space-y-2'>
-            <label className='text-sm font-medium'>Category</label>
+            <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+              Category
+            </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as QuizCategory)}
-              className='w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+              className='w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-100'
             >
               {QUIZ_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -215,12 +237,35 @@ export default function NewQuizPage() {
           </div>
 
           <div className='space-y-2'>
-            <label className='text-sm font-medium'>Tags</label>
+            <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+              Allowed Modes
+            </label>
+            <div className='flex flex-wrap gap-2'>
+              {QUIZ_MODES.map((mode) => (
+                <label
+                  key={mode}
+                  className='inline-flex items-center gap-2 rounded border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
+                >
+                  <input
+                    type='checkbox'
+                    checked={allowedModes.includes(mode)}
+                    onChange={() => toggleAllowedMode(mode)}
+                  />
+                  {mode}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className='space-y-2 md:col-span-2'>
+            <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
+              Tags
+            </label>
             <div className='flex flex-wrap gap-2'>
               {QUIZ_TAGS.map((tag) => (
                 <label
                   key={tag}
-                  className='inline-flex items-center gap-2 rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800'
+                  className='inline-flex items-center gap-2 rounded border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
                 >
                   <input
                     type='checkbox'
@@ -235,7 +280,7 @@ export default function NewQuizPage() {
         </div>
 
         <div className='space-y-2'>
-          <label className='text-sm font-medium'>
+          <label className='text-sm font-medium text-slate-900 dark:text-slate-100'>
             Questions (select one or more)
           </label>
 
@@ -244,15 +289,17 @@ export default function NewQuizPage() {
               value={quizNameFilter}
               onChange={(e) => setQuizNameFilter(e.target.value)}
               placeholder='Filter questions by quiz name...'
-              className='w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+              className='w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-100'
             />
             {/* CHANGED: quiz name filter sits above the list so you can narrow questions without affecting selected questionIds. */}
           </div>
 
           {loadingQuestions ? (
-            <p className='text-sm text-slate-500'>Loading questions...</p>
+            <p className='text-sm text-slate-500 dark:text-slate-400'>
+              Loading questions...
+            </p>
           ) : filteredQuestions.length === 0 ? (
-            <p className='text-sm text-slate-500'>
+            <p className='text-sm text-slate-500 dark:text-slate-400'>
               No questions match the current quiz name filter.
             </p>
           ) : (
@@ -286,7 +333,7 @@ export default function NewQuizPage() {
         <button
           type='submit'
           disabled={saving}
-          className='rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50'
+          className='rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900'
         >
           {saving ? 'Creating...' : 'Create Quiz'}
         </button>

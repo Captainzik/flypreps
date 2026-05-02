@@ -8,6 +8,7 @@ Repo: Captainzik/radpreps
 Branch: staging
 File path: app/quiz/page.tsx
 
+If you want, I can next inspect your quiz detail page flow and tell you whether it already routes users into the correct exam/CPD attempt path.
 
 Important note
 These pages now assume getQuizAttemptResult(...) returns startedAt, timedOut, and forceCompletedByTimeout if available. If your current action does not yet return those fields, the fallback values will keep this compiling, but you may want to expose them from the action for full fidelity.

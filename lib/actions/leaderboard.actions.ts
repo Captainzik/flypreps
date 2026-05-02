@@ -2,12 +2,7 @@ import mongoose from 'mongoose'
 import { Leaderboard } from '@/lib/db/models/leaderboard.model'
 import { getCurrentWeekPeriod } from '@/lib/utils'
 
-export type CategoryType =
-  | 'ARDMS'
-  | 'Sonography Canada'
-  | 'CAMRT'
-  | 'ARRT'
-  | 'CPD'
+export type CategoryType = 'Radiography' | 'Sonography'
 
 export type UpsertLeaderboardFromAttemptParams = {
   userId: string
@@ -38,7 +33,6 @@ export async function upsertLeaderboardFromAttempt({
 }: UpsertLeaderboardFromAttemptParams) {
   const period = getCurrentWeekPeriod()
 
-  // 1) Increment counters
   const updated = await Leaderboard.findOneAndUpdate(
     { period, user: userId },
     {
@@ -61,7 +55,6 @@ export async function upsertLeaderboardFromAttempt({
     throw new Error('Failed to upsert leaderboard entry')
   }
 
-  // 2) Recompute average from accumulator
   const averagePercentage =
     updated.quizAttempts > 0
       ? updated.totalPercentage / updated.quizAttempts

@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
       description: payload.description,
       image: payload.image || '',
       category: payload.category,
+      allowedModes: payload.allowedModes, // CHANGED: persist shared mode availability from the form payload.
       tags: payload.tags,
       questions: payload.questions,
       // keep defaults from model for reviews/ratings fields

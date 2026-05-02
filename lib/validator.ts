@@ -13,13 +13,8 @@ const MongoId = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, { message: 'Invalid MongoDB ID' })
 
-const CategoryEnum = z.enum([
-  'ARDMS',
-  'Sonography Canada',
-  'CAMRT',
-  'ARRT',
-  'CPD',
-])
+const CategoryEnum = z.enum(['Radiography', 'Sonography']) // CHANGED: quiz category now represents subject area, not exam/CPD mode.
+const ModeEnum = z.enum(['exam', 'cpd']) // CHANGED: allowedModes uses exam/cpd as the source of truth for quiz availability.
 
 export const CreateOptionSchema = z
   .object({
@@ -94,8 +89,12 @@ export const CreateQuizSchema = z.object({
   description: z.string().min(10).max(2000).trim(),
   image: UrlOptional,
   category: CategoryEnum,
+  allowedModes: z.array(ModeEnum).min(1).max(2), // CHANGED: quizzes must belong to at least one mode and can be shared across both.
   isPublished: z.boolean().default(false),
-  tags: z.enum(['Radiography', 'Sonography']).array().default([]),
+  tags: z
+    .enum(['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CCI'])
+    .array()
+    .default([]),
   questions: z
     .array(MongoId)
     .min(1, 'At least 1 question required')

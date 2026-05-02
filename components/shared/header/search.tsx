@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select'
 import { APP_NAME } from '@/lib/constants'
 
-const categories = ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD']
+const categories = ['Radiography', 'Sonography']
 
 export default function Search() {
   return (

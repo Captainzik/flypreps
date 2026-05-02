@@ -5,8 +5,9 @@ export interface IQuiz {
   name: string
   description: string
   image?: string
-  category: 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CPD'
-  tags: ('Radiography' | 'Sonography')[]
+  allowedModes: ('exam' | 'cpd')[]
+  category: 'Radiography' | 'Sonography'
+  tags: ('ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CCI')[]
   questions: Types.ObjectId[]
   avgRating: number
   numReviews: number
@@ -44,16 +45,29 @@ const QuizSchema = new Schema<IQuiz>(
         message: 'Invalid image URL',
       },
     },
+    allowedModes: {
+      type: [
+        {
+          type: String,
+          enum: ['exam', 'cpd'],
+          required: true,
+        },
+      ],
+      default: ['exam'],
+      required: [true, 'At least one mode is required'],
+      minlength: [1, 'At least 1 mode required'],
+      maxlength: [2, 'Maximum 2 modes allowed'],
+    },
     category: {
       type: String,
-      enum: ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD'],
+      enum: ['Radiography', 'Sonography'],
       required: [true, 'Category is required'],
     },
     tags: {
       type: [
         {
           type: String,
-          enum: ['Radiography', 'Sonography'],
+          enum: ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CCI'],
         },
       ],
       default: [],
@@ -118,6 +132,7 @@ const QuizSchema = new Schema<IQuiz>(
 
 // Indexes
 QuizSchema.index({ category: 1 })
+QuizSchema.index({ allowedModes: 1 })
 QuizSchema.index({ tags: 1 })
 QuizSchema.index({ name: 1 })
 QuizSchema.index({ isPublished: 1, updatedAt: -1 })
