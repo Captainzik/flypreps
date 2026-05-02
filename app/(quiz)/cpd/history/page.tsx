@@ -7,7 +7,7 @@ export default async function CpdHistoryPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/cpd/history') // CHANGED: cpd-specific auth callback path.
+    redirect('/signin?callbackUrl=/cpd/history') // CHANGED: keeps your current (quiz)-grouped CPD history route convention.
   }
 
   const history = await getUserQuizHistory({
@@ -15,7 +15,7 @@ export default async function CpdHistoryPage() {
     limit: 100,
   })
 
-  const cpdHistory = history.filter((item) => item.category === 'CPD') // CHANGED: history list is filtered to CPD-mode attempts.
+  const cpdHistory = history.filter((item) => item.mode === 'cpd') // CHANGED: mode-based filtering instead of category-based filtering.
 
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -38,7 +38,7 @@ export default async function CpdHistoryPage() {
           </p>
           <Link
             href='/cpd/start'
-            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
+            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
           >
             Start CPD
           </Link>
@@ -51,8 +51,8 @@ export default async function CpdHistoryPage() {
               className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5'
             >
               <div className='flex flex-wrap items-start justify-between gap-3'>
-                <div>
-                  <h2 className='text-base font-semibold text-slate-900 dark:text-white'>
+                <div className='min-w-0'>
+                  <h2 className='text-base font-semibold text-slate-900 dark:text-white wrap-break-words'>
                     {item.quizName}
                   </h2>
                   <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
@@ -94,14 +94,14 @@ export default async function CpdHistoryPage() {
                 {item.completed ? (
                   <Link
                     href={`/cpd/attempt/${item.id}/result`}
-                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
+                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     View result
                   </Link>
                 ) : (
                   <Link
                     href={`/cpd/attempt/${item.id}`}
-                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
+                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     Continue attempt
                   </Link>
@@ -110,7 +110,7 @@ export default async function CpdHistoryPage() {
                 {item.quizId ? (
                   <Link
                     href={`/quiz/cpd/${item.quizId}`}
-                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
                   >
                     Quiz details
                   </Link>

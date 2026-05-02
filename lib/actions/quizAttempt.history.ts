@@ -1,9 +1,12 @@
 import { connectToDatabase, QuizAttempt } from './quizAttempt.shared'
 
+export type QuizMode = 'exam' | 'cpd' // CHANGED: history now exposes attempt mode directly for correct exam/CPD filtering.
+
 export type QuizHistoryItem = {
   id: string
   quizId: string
   quizName: string
+  mode: QuizMode // CHANGED: replaces category-based filtering with explicit mode.
   category: string
   score: number
   maxScore: number
@@ -45,10 +48,13 @@ export async function getUserQuizHistory(params: {
         }
       | undefined
 
+    const mode: QuizMode = attempt.mode
+
     return {
       id: attempt._id.toString(),
       quizId: quizObj?._id?.toString?.() ?? '',
       quizName: quizObj?.name ?? 'Quiz',
+      mode, // CHANGED: returned for direct mode-based filtering in history pages.
       category: attempt.category || quizObj?.category || '',
       score: attempt.score ?? 0,
       maxScore: attempt.maxScore ?? 0,

@@ -14,8 +14,8 @@ type PageProps = {
   }>
 }
 
-type QuizTag = 'Radiography' | 'Sonography'
-type QuizCategory = 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CPD'
+type QuizTag = 'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CCI'
+type QuizCategory = 'Radiography' | 'Sonography'
 
 type QuizDetails = {
   _id: Types.ObjectId
@@ -23,6 +23,7 @@ type QuizDetails = {
   description: string
   image?: string
   category: QuizCategory
+  allowedModes: Array<'exam' | 'cpd'> // CHANGED: mode gating now comes from allowedModes, not category.
   tags: QuizTag[]
   isPublished?: boolean
   questions: Types.ObjectId[]
@@ -38,11 +39,14 @@ export default async function QuizDetailsPage({ params }: PageProps) {
   }
 
   const quiz = (await Quiz.findById(quizId)
-    .select('name description image category tags questions isPublished')
+    .select(
+      'name description image category allowedModes tags questions isPublished',
+    )
     .lean()) as QuizDetails | null
 
   if (!quiz) notFound()
   if (!quiz.isPublished) notFound()
+  if (!quiz.allowedModes?.includes('cpd')) notFound() // CHANGED: CPD page only shows quizzes allowed for CPD mode.
 
   const questionIds = Array.isArray(quiz.questions) ? quiz.questions : []
   const questionCount = questionIds.length
@@ -56,10 +60,10 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
   return (
     <main className='space-y-4 sm:space-y-6'>
-      <section className='rounded-xl border border-slate-200 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
+      <section className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
         <div className='flex flex-wrap items-start justify-between gap-3'>
-          <div>
-            <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>
+          <div className='min-w-0'>
+            <h1 className='text-2xl font-bold text-slate-900 dark:text-white wrap-break-words'>
               {quiz.name}
             </h1>
             <p className='mt-1 text-sm text-slate-600 dark:text-slate-400'>
@@ -71,7 +75,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
             {quiz.tags?.map((tag) => (
               <span
                 key={tag}
-                className='rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                className='rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300 wrap-break-words'
               >
                 {tag}
               </span>
@@ -116,7 +120,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           {canStart ? (
             <Link
               href={`/quiz/cpd/${quiz._id.toString()}/start`} // CHANGED: CPD-specific start route.
-              className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
+              className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
             >
               Start quiz
             </Link>
@@ -124,7 +128,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
             <button
               type='button'
               disabled
-              className='inline-flex items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white dark:bg-slate-700 dark:text-slate-400'
+              className='inline-flex items-center justify-center rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-white dark:bg-slate-700 dark:text-slate-400 wrap-break-words'
             >
               Quiz unavailable
             </button>
@@ -132,7 +136,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
           <Link
             href='/quiz/cpd/start'
-            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
           >
             Back to quizzes
           </Link>

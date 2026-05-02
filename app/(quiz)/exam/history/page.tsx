@@ -7,7 +7,7 @@ export default async function ExamHistoryPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/exam/history') // CHANGED: exam-specific auth callback path.
+    redirect('/signin?callbackUrl=/exam/history') // CHANGED: keeps your current (quiz)-grouped exam history route convention.
   }
 
   const history = await getUserQuizHistory({
@@ -15,7 +15,7 @@ export default async function ExamHistoryPage() {
     limit: 100,
   })
 
-  const examHistory = history.filter((item) => item.category !== 'CPD') // CHANGED: history list is filtered to exam-mode attempts.
+  const examHistory = history.filter((item) => item.mode === 'exam') // CHANGED: mode-based filtering instead of category-based filtering.
 
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -38,7 +38,7 @@ export default async function ExamHistoryPage() {
           </p>
           <Link
             href='/exam/start'
-            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
+            className='mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600'
           >
             Start an exam
           </Link>
@@ -51,8 +51,8 @@ export default async function ExamHistoryPage() {
               className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5'
             >
               <div className='flex flex-wrap items-start justify-between gap-3'>
-                <div>
-                  <h2 className='text-base font-semibold text-slate-900 dark:text-white'>
+                <div className='min-w-0'>
+                  <h2 className='text-base font-semibold text-slate-900 dark:text-white wrap-break-words'>
                     {item.quizName}
                   </h2>
                   <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
@@ -94,14 +94,14 @@ export default async function ExamHistoryPage() {
                 {item.completed ? (
                   <Link
                     href={`/exam/attempt/${item.id}/result`}
-                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
+                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     View result
                   </Link>
                 ) : (
                   <Link
                     href={`/exam/attempt/${item.id}`}
-                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
+                    className='inline-flex rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
                   >
                     Continue attempt
                   </Link>
@@ -110,7 +110,7 @@ export default async function ExamHistoryPage() {
                 {item.quizId ? (
                   <Link
                     href={`/quiz/exam/${item.quizId}`}
-                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
                   >
                     Quiz details
                   </Link>

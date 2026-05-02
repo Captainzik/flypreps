@@ -43,7 +43,7 @@ export async function getStartableQuizzes(): Promise<StartableQuiz[]> {
     name: q.name ?? '',
     description: q.description ?? '',
     category: q.category,
-    allowedModes: q.allowedModes ?? ['exam'], // CHANGED: safe fallback for older records.
+    allowedModes: q.allowedModes, // CHANGED: pass allowedModes through to the UI for filtering on exam/CPD pages.
     questionsCount: Array.isArray(q.questions) ? q.questions.length : 0,
     image: q.image || '',
     isPublished: q.isPublished === true,

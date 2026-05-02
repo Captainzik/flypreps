@@ -14,7 +14,7 @@ export default async function QuizAttemptStartPage({ params }: PageProps) {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/${quizId}/attempt`)
+    redirect(`/signin?callbackUrl=/quiz/exam/${quizId}/attempt`) // CHANGED: exam-specific callback path.
   }
 
   const attempt = await startQuizAttempt({
@@ -22,5 +22,5 @@ export default async function QuizAttemptStartPage({ params }: PageProps) {
     userId: session.user.id,
   })
 
-  redirect(`/quiz/attempt/${attempt._id.toString()}`)
+  redirect(`/quiz/exam/attempt/${attempt._id.toString()}`) // CHANGED: exam-specific attempt route.
 }

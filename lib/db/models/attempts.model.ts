@@ -220,7 +220,7 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
     },
     category: {
       type: String,
-      enum: ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD'],
+      enum: ['Radiography', 'Sonography'],
       index: true,
     },
   },

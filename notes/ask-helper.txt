@@ -3,81 +3,29 @@ Give me full typed files based on my existing structure and recent code/file mod
 comments on the exact changed lines/code.
 Also make sure codes are mobile responsive and responsive to darkmode theme.
 
+'ARDMS' | 'Sonography Canada' | 'CAMRT' | 'ARRT' | 'CCI'
+
+One last thing to watch
+Make sure any old UI or shared helper still doesn’t do this:
+
+category === 'CPD'
+category !== 'CPD'
+Those should be fully removed now.
+
+If you want, I can do one more pass and point out the remaining files likely still using old category-based mode logic.
+
+Best practice here
+For a clean reset, keep the code strict and explicit:
+
+required fields remain required
+no compatibility branches
+no legacy semantics hidden in fallbacks
+If you want, I can help you do a final cleanup audit of the quiz/attempt flow to remove any other leftover fallback or legacy checks.
 
 Repo: Captainzik/radpreps
 Branch: staging
 File path: app/quiz/page.tsx
 
-If you want, I can next inspect your quiz detail page flow and tell you whether it already routes users into the correct exam/CPD attempt path.
-
-Important note
-These pages now assume getQuizAttemptResult(...) returns startedAt, timedOut, and forceCompletedByTimeout if available. If your current action does not yet return those fields, the fallback values will keep this compiling, but you may want to expose them from the action for full fidelity.
-
-If you want, I can next give you the exact action-layer patch for lib/actions/quizAttempt.actions.ts so these result pages receive those fields cleanly.
-
-
-Next, I’d do one of these two things:
-
-Best next step: remove duplication in the result/attempt UI
-Now that routing is clean, the biggest maintenance win is to deduplicate the similar exam/CPD pages.
-
-Good candidates:
-app/(quiz)/exam/attempt/[attemptId]/page.tsx
-app/(quiz)/cpd/attempt/[attemptId]/page.tsx
-app/(quiz)/exam/attempt/[attemptId]/result/page.tsx
-app/(quiz)/cpd/attempt/[attemptId]/result/page.tsx
-You already extracted some shared pieces, but there’s still likely:
-
-repeated page wrapper logic
-repeated result card layout
-repeated media/option rendering
-repeated status badge logic
-Best structural follow-up
-Create a shared quiz page layer:
-
-components/learning/quiz-attempt-shell.tsx
-components/results/quiz-result-shell.tsx
-or, if you want even cleaner composition:
-
-components/learning/quiz-attempt-header.tsx
-components/learning/quiz-question-card.tsx
-components/results/quiz-result-summary.tsx
-components/results/quiz-result-answer-card.tsx
-This lets the route files stay thin and makes future changes much easier.
-
-Another valuable next step: split quizAttempt.actions.ts
-That file is now doing a lot:
-
-start attempt
-active attempt fetch
-submit answer
-finalize attempt
-fetch result
-history
-feed activity
-A good next cleanup would be to split it into:
-
-quizAttempt.start.ts
-quizAttempt.active.ts
-quizAttempt.submit.ts
-quizAttempt.result.ts
-quizAttempt.history.ts
-This is optional, but it will help a lot as the app grows.
-
-What I recommend doing next, in order
-Deduplicate the result page UI
-Deduplicate the active attempt UI
-Split the large actions file
-Add a shared quiz route shell if needed
-Then test the full exam and CPD flow end-to-end
-If you want a concrete next move
-I’d suggest we start with:
-
-app/(quiz)/exam/attempt/[attemptId]/result/page.tsx and app/(quiz)/cpd/attempt/[attemptId]/result/page.tsx
-
-because those still have the most repeated UI and are the easiest place to gain maintainability quickly.
-
-If you want, I can next give you a shared result component extraction plan with full typed files.
 
 
 If you want, I can next give you:
@@ -94,158 +42,6 @@ These audio files reference paths like:
 So make sure your public/audio/ folder contains those files.
 
 
-
-I did the scan, and the good news is: your route grouping is already solid. The deeper maintenance issue is not folder placement, but that several route files still contain duplicated UI + duplicated mode logic that should be extracted.
-
-What should be moved / cleaned up
-1) app/(quiz)/exam/attempt/[attemptId]/page.tsx
-This file is still doing too much:
-
-auth
-data load
-redirect/notFound
-current-question selection
-question UI
-option UI
-media UI
-submit form UI
-That means the following should be extracted:
-
-active-attempt wrapper component
-question card renderer
-option renderer
-possibly a reusable attempt header
-exam-only timer badge integration
-This file should end up as a thin route wrapper.
-
-2) app/(quiz)/cpd/attempt/[attemptId]/page.tsx
-This is basically a duplicate of the exam attempt page, but currently it’s even more concerning because it still uses:
-
-/quiz/attempt/... redirects
-the old active-attempt structure
-no CPD-specific distinction in the page body
-This one should also be split into:
-
-route wrapper
-shared active-attempt component
-mode-specific configuration
-3) app/(quiz)/exam/attempt/[attemptId]/result/page.tsx
-This file contains:
-
-result header
-score cards
-action buttons
-review form
-per-answer review rendering
-option rendering helper
-image/media helper
-This should be split into:
-
-components/results/quiz-result-summary.tsx for the top summary
-a reusable result-answer-card or question-review-card
-a reusable option renderer
-keep the route file as orchestration only
-4) app/(quiz)/cpd/attempt/[attemptId]/result/page.tsx
-Same issue as exam result page:
-
-too much UI in route file
-duplicated renderOption
-duplicated card/media styling
-This should be extracted to shared result components as well.
-
-5) app/(quiz)/exam/[quizId]/attempt/page.tsx and app/(quiz)/cpd/[quizId]/attempt/page.tsx
-These are currently wrong in the codebase you showed, because they redirect to:
-
-/quiz/${quizId}/attempt
-/quiz/attempt/${attempt._id.toString()}
-Those old URLs do not match your new grouped routing.
-
-They should eventually redirect to:
-
-/(quiz)/exam/attempt/... or the actual public URL generated by your route group
-same for CPD
-At minimum, the redirect targets must be updated to the new grouped structure.
-
-Shared logic that should stay out of route files
-Keep in lib/actions
-quizAttempt.actions.ts
-all attempt completion / grading / leaderboard / user streak logic
-Keep in lib/ui
-quiz-timing.ts
-countdown formatting
-CPD summary duration formatting
-exam timer state computation
-Keep in components/learning
-quiz-timing-badge.tsx
-live attempt wrapper
-question card / option card / answer form subcomponents
-Keep in components/results
-quiz-result-summary.tsx
-result answer cards
-option renderer for review
-score/performance summary blocks
-Extra findings from the scan
-A. You still have URL mismatches from the old structure
-Several files still reference old paths like:
-
-/quiz/start
-/quiz/attempt/...
-/quiz/${quizId}/attempt
-These need to be updated to match the new app/(quiz) route group output.
-
-B. CPD and exam pages are still copy-pasted
-The exam and CPD attempt/result pages are almost identical right now. That’s a maintenance risk.
-
-Best approach:
-
-create shared base components
-pass mode-specific props
-keep only small route-specific differences in the route files
-C. lib/actions/quizAttempt.actions.ts has grown large
-It now contains:
-
-attempt creation
-active attempt fetch
-answer submission
-final submission
-result fetch
-history fetch
-feed activity fetch
-That’s functional, but for long-term maintenance, this should likely be split into:
-
-quizAttempt.start.ts
-quizAttempt.submit.ts
-quizAttempt.result.ts
-quizAttempt.history.ts
-quizAttempt.feed.ts
-Not mandatory immediately, but worth planning.
-
-D. getActiveQuizAttempt is returning more than it needs
-It’s currently shaping UI data directly in the action layer. That’s okay for now, but if the UI becomes richer, consider:
-
-a dedicated view model mapper
-or a thin route-level adapter
-My recommendation: priority order
-Highest priority
-Fix redirect paths in quiz start/attempt routes to match the new grouped URLs
-Extract active-attempt UI from app/(quiz)/exam/attempt/[attemptId]/page.tsx
-Extract result summary + review card UI from result pages
-Make CPD pages actually CPD-aware
-Reduce duplicate styling/render helpers
-Medium priority
-Split quizAttempt.actions.ts into smaller action files
-Add shared review-card/option-card components
-Add a shared quiz page shell/layout component for exam/CPD
-Bottom line
-Your route tree is good.
-What still needs work is de-duplication and routing correctness, not folder structure.
-
-If you want, I can now give you a concrete move/extract plan file-by-file for:
-
-what stays in each route file
-what becomes a component
-what should be split out of lib/actions/quizAttempt.actions.ts
-which exact redirect URLs need changing next.
 
 
 
