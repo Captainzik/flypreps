@@ -7,6 +7,7 @@ import {
   buildAudioEventEnvelope,
 } from './quizAttempt.shared'
 import type { IQuizAttempt } from '../db/models/attempts.model'
+import { getModeRules } from '@/lib/modes/rules'
 
 export async function startQuizAttempt(input: {
   quizId: string
@@ -19,7 +20,7 @@ export async function startQuizAttempt(input: {
   const { quizId, userId, attemptKey } = input
 
   const quiz = await Quiz.findById(quizId)
-    .select('_id category questions')
+    .select('_id questions allowedModes') // CHANGED: only use allowedModes for mode selection.
     .lean()
 
   if (!quiz) throw new Error('Quiz not found')
@@ -27,7 +28,11 @@ export async function startQuizAttempt(input: {
     throw new Error('Quiz has no questions')
   }
 
-  const mode = getAttemptMode({ mode: input.mode, quizCategory: quiz.category })
+  const mode = getAttemptMode({
+    mode: input.mode,
+    allowedModes: quiz.allowedModes as Array<'exam' | 'cpd'> | undefined, // CHANGED: no category fallback.
+  })
+
   const answers: IQuizAttempt['answers'] = quiz.questions.map((qId) => ({
     question: qId,
     selectedOptionIndex: undefined,
@@ -37,9 +42,7 @@ export async function startQuizAttempt(input: {
   }))
 
   const now = new Date()
-  const modeRules = await import('@/lib/modes/rules').then((m) =>
-    m.getModeRules(mode),
-  )
+  const modeRules = getModeRules(mode)
   const questionTimeLimitMs = modeRules.questionTimeLimitSeconds
     ? modeRules.questionTimeLimitSeconds * 1000
     : undefined
@@ -74,7 +77,7 @@ export async function startQuizAttempt(input: {
     gemsEarned: 0,
     xpEarned: 0,
     answers,
-    category: quiz.category,
+    // CHANGED: category stays for display/history metadata only, not mode detection.
   })
 
   void buildAudioEventEnvelope(userId, { type: 'mode_enter', mode }) // CHANGED: emit mode entry event from start action.

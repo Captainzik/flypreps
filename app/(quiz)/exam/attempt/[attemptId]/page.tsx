@@ -1,8 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { completeQuizAttempt } from '@/lib/actions/quizAttempt.result'
 import { getActiveQuizAttempt } from '@/lib/actions/quizAttempt.active'
-import { QuizActiveAttemptShell } from '@/components/learning/quiz-active-attempt-shell'
+import { QuizExamAttemptClient } from '@/components/learning/quiz-exam-attempt-client'
 
 type PageProps = {
   params: Promise<{
@@ -40,7 +39,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/exam/attempt/${attemptId}`) // CHANGED: exam-specific auth callback path.
+    redirect(`/signin?callbackUrl=/exam/attempt/${attemptId}`) // CHANGED: exam-specific auth callback.
   }
 
   const attempt = (await getActiveQuizAttempt({
@@ -57,11 +56,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   ).length
 
   if (answeredCount >= attempt.questions.length) {
-    await completeQuizAttempt({
-      attemptId,
-      userId: session.user.id,
-    })
-    redirect(`/exam/attempt/${attemptId}/result`) // CHANGED: exam-specific completed-attempt redirect.
+    redirect(`/exam/attempt/${attemptId}/result`) // CHANGED: completed attempts go straight to result.
   }
 
   const currentQuestion = attempt.questions[answeredCount]
@@ -71,16 +66,20 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   }
 
   return (
-    <QuizActiveAttemptShell
+    <QuizExamAttemptClient
+      attemptId={attemptId}
       mode={attempt.mode}
-      startedAt={attempt.startedAt}
+      startedAt={
+        attempt.startedAt instanceof Date
+          ? attempt.startedAt.toISOString()
+          : new Date(attempt.startedAt).toISOString()
+      } // CHANGED: serializable ISO string for the client component.
       quizName={attempt.quiz.name}
       quizCategory={attempt.quiz.category}
       questionNumber={answeredCount + 1}
       totalQuestions={attempt.questions.length}
       question={currentQuestion}
       action={`/exam/attempt/${attemptId}/answer`} // CHANGED: exam-specific answer endpoint.
-      showTimer={attempt.mode === 'exam'}
     />
   )
 }

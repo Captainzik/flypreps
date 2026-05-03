@@ -1,6 +1,6 @@
 'use client'
 
-import type { QuizMode } from '@/lib/modes/types' // CHANGED: header is mode-aware for exam/CPD handling.
+import type { QuizMode } from '@/lib/modes/types'
 import { QuizTimingBadge } from '@/components/learning/quiz-timing-badge'
 
 type QuizAttemptHeaderProps = {
@@ -11,6 +11,7 @@ type QuizAttemptHeaderProps = {
   quizCategory: string
   questionNumber: number
   showTimer?: boolean
+  onExpire?: () => void // CHANGED: forwarded to QuizTimingBadge.
 }
 
 export function QuizAttemptHeader({
@@ -21,6 +22,7 @@ export function QuizAttemptHeader({
   quizCategory,
   questionNumber,
   showTimer = true,
+  onExpire,
 }: QuizAttemptHeaderProps) {
   return (
     <section className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6'>
@@ -39,6 +41,7 @@ export function QuizAttemptHeader({
             mode={mode}
             startedAt={startedAt}
             totalQuestions={totalQuestions}
+            onExpire={onExpire} // CHANGED: enables timeout auto-submit.
           />
         ) : null}
       </div>

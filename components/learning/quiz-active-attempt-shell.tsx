@@ -22,6 +22,7 @@ type QuizActiveAttemptShellProps = {
   }
   action: string
   showTimer?: boolean
+  onExpire?: () => void // CHANGED: forwarded through to the timer badge.
 }
 
 export function QuizActiveAttemptShell({
@@ -34,6 +35,7 @@ export function QuizActiveAttemptShell({
   question,
   action,
   showTimer = true,
+  onExpire,
 }: QuizActiveAttemptShellProps) {
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -45,6 +47,7 @@ export function QuizActiveAttemptShell({
         quizCategory={quizCategory}
         questionNumber={questionNumber}
         showTimer={showTimer}
+        onExpire={onExpire} // CHANGED: preserves expiry callback chain.
       />
 
       <QuizQuestionCard question={question} action={action} />

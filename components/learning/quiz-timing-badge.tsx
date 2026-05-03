@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { QuizMode } from '@/lib/modes/types'
 import { Clock } from 'lucide-react'
 import {
@@ -15,6 +15,7 @@ type QuizTimingBadgeProps = {
   completedAt?: Date
   timeTakenMs?: number
   showCompletedTime?: boolean
+  onExpire?: () => void // CHANGED: used by the safe client wrapper to POST /complete.
 }
 
 export function QuizTimingBadge({
@@ -24,8 +25,10 @@ export function QuizTimingBadge({
   completedAt,
   timeTakenMs,
   showCompletedTime = false,
+  onExpire,
 }: QuizTimingBadgeProps) {
   const [now, setNow] = useState<Date | null>(null)
+  const expiredRef = useRef(false) // CHANGED: avoid duplicate expiry calls.
 
   useEffect(() => {
     if (mode !== 'exam' || showCompletedTime) return
@@ -47,6 +50,14 @@ export function QuizTimingBadge({
       now,
     })
   }, [mode, showCompletedTime, now, startedAt, totalQuestions])
+
+  useEffect(() => {
+    if (mode !== 'exam' || showCompletedTime || !countdown?.expired) return
+    if (expiredRef.current) return
+
+    expiredRef.current = true // CHANGED: lock before notifying parent.
+    onExpire?.() // CHANGED: safe client wrapper handles the POST and redirect.
+  }, [countdown?.expired, mode, onExpire, showCompletedTime])
 
   const completedLabel = useMemo(() => {
     if (mode !== 'cpd') return undefined

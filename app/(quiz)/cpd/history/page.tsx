@@ -7,15 +7,14 @@ export default async function CpdHistoryPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/cpd/history') // CHANGED: keeps your current (quiz)-grouped CPD history route convention.
+    redirect('/signin?callbackUrl=/cpd/history') // CHANGED: keeps your current CPD history route.
   }
 
-  const history = await getUserQuizHistory({
+  const cpdHistory = await getUserQuizHistory({
     userId: session.user.id,
     limit: 100,
+    mode: 'cpd', // CHANGED: query CPD history directly so exam attempts never leak in.
   })
-
-  const cpdHistory = history.filter((item) => item.mode === 'cpd') // CHANGED: mode-based filtering instead of category-based filtering.
 
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -110,7 +109,7 @@ export default async function CpdHistoryPage() {
                 {item.quizId ? (
                   <Link
                     href={`/cpd/${item.quizId}`}
-                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
+                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                   >
                     Quiz details
                   </Link>

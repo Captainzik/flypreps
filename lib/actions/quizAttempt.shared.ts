@@ -25,9 +25,21 @@ export const isMongoDuplicateKeyError = (
 
 export function getAttemptMode(input: {
   mode?: QuizMode
-  quizCategory?: string
+  allowedModes?: Array<'exam' | 'cpd'>
 }) {
-  return input.mode ?? (input.quizCategory === 'CPD' ? 'cpd' : 'exam')
+  if (input.mode) return input.mode
+
+  // CHANGED: mode is now derived only from explicit allowedModes, not category.
+  if (Array.isArray(input.allowedModes)) {
+    const hasExam = input.allowedModes.includes('exam')
+    const hasCpd = input.allowedModes.includes('cpd')
+
+    if (hasCpd && !hasExam) return 'cpd'
+    if (hasExam && !hasCpd) return 'exam'
+  }
+
+  // CHANGED: fallback defaults to exam when no explicit mode information exists.
+  return 'exam'
 }
 
 export function getResultVisibility(mode: QuizMode) {

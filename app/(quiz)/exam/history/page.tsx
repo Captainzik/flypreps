@@ -7,15 +7,14 @@ export default async function ExamHistoryPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/signin?callbackUrl=/exam/history') // CHANGED: keeps your current (quiz)-grouped exam history route convention.
+    redirect('/signin?callbackUrl=/exam/history') // CHANGED: keeps your current exam history route.
   }
 
-  const history = await getUserQuizHistory({
+  const examHistory = await getUserQuizHistory({
     userId: session.user.id,
     limit: 100,
+    mode: 'exam', // CHANGED: query exam history directly so CPD never leaks in.
   })
-
-  const examHistory = history.filter((item) => item.mode === 'exam') // CHANGED: mode-based filtering instead of category-based filtering.
 
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -110,7 +109,7 @@ export default async function ExamHistoryPage() {
                 {item.quizId ? (
                   <Link
                     href={`/exam/${item.quizId}`}
-                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
+                    className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                   >
                     Quiz details
                   </Link>

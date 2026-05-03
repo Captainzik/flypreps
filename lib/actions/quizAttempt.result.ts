@@ -66,13 +66,15 @@ export async function completeQuizAttempt(
     }
 
     const quiz = await Quiz.findById(attempt.quiz)
+      .select('_id questions allowedModes category') // CHANGED: include allowedModes so mode detection no longer depends on category.
       .populate('questions')
       .lean()
       .session(session)
 
     if (!quiz) throw new Error('Quiz not found')
 
-    const mode = attempt.mode || getAttemptMode({ quizCategory: quiz.category })
+    const mode =
+      attempt.mode || getAttemptMode({ allowedModes: quiz.allowedModes }) // CHANGED: remove quizCategory fallback entirely.
     const modeRules = getModeRules(mode)
     const populatedQuestions = quiz.questions as unknown as IQuestion[]
     const questionMap = new Map(
