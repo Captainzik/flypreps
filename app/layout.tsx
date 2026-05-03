@@ -4,7 +4,7 @@ import './globals.css'
 import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from '@/lib/constants'
 import AuthSessionProvider from '@/components/providers/session-provider'
 import ToasterProvider from '@/components/providers/toaster-provider'
-import Header from '@/components/shared/header'
+import Header from '@/components/shared/header/header'
 import ThemeProvider from '@/components/providers/theme-provider'
 
 const geistSans = Geist({

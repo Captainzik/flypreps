@@ -35,13 +35,16 @@ export async function submitAnswerToAttempt(input: {
 
   attempt.answers[answerIndex].selectedOptionIndex = selectedOptionIndex
   attempt.answers[answerIndex].timeSpentMs = timeSpentMs
-  attempt.currentQuestionIndex = Math.min(
-    attempt.answers.length,
-    answerIndex + 1,
-  )
+
   attempt.questionsAnswered = attempt.answers.filter(
     (a) => typeof a.selectedOptionIndex === 'number',
-  ).length
+  ).length // CHANGED: keep count in sync for persistence, but CPD navigation no longer uses it.
+
+  attempt.currentQuestionIndex = answerIndex + 1 // CHANGED: move to the next question by index only.
+
+  if (attempt.currentQuestionIndex >= attempt.answers.length) {
+    attempt.currentQuestionIndex = attempt.answers.length // CHANGED: boundary marker for completion; page will redirect to result.
+  }
 
   await attempt.save()
 
@@ -49,6 +52,7 @@ export async function submitAnswerToAttempt(input: {
     attemptId: attempt._id.toString(),
     questionsAnswered: attempt.questionsAnswered,
     totalQuestions: attempt.answers.length,
+    currentQuestionIndex: attempt.currentQuestionIndex, // CHANGED: expose the next pointer to callers.
     completed: attempt.completed,
   }
 }

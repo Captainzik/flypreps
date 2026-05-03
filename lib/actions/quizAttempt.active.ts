@@ -1,6 +1,17 @@
 import { connectToDatabase, QuizAttempt } from './quizAttempt.shared'
 import { getActiveAttemptTimerState } from '@/lib/learning/timing'
 
+type ActiveAttemptQuestion = {
+  questionId: string
+  questionText: string
+  image?: string
+  options: {
+    text?: string
+    image?: string
+  }[]
+  selectedOptionIndex?: number
+}
+
 export async function getActiveQuizAttempt(params: {
   attemptId: string
   userId: string
@@ -30,30 +41,39 @@ export async function getActiveQuizAttempt(params: {
     image?: string
   }
 
-  const questions = (attempt.answers || []).map((a) => {
-    const q = a.question as unknown as {
-      _id: import('mongoose').Types.ObjectId
-      question: string
-      image?: string
-      options: Array<{ text?: string; image?: string; isCorrect?: boolean }>
-    }
+  const questions: ActiveAttemptQuestion[] = (attempt.answers || []).map(
+    (a) => {
+      const q = a.question as unknown as {
+        _id: import('mongoose').Types.ObjectId
+        question: string
+        image?: string
+        options: Array<{ text?: string; image?: string; isCorrect?: boolean }>
+      }
 
-    return {
-      questionId: q?._id?.toString?.() ?? '',
-      questionText: q?.question ?? '',
-      image: q?.image ?? '',
-      options: (q?.options || []).map((o) => ({
-        text: o?.text ?? '',
-        image: o?.image ?? '',
-      })),
-      selectedOptionIndex: a.selectedOptionIndex,
-    }
-  })
+      return {
+        questionId: q?._id?.toString?.() ?? '',
+        questionText: q?.question ?? '',
+        image: q?.image ?? '',
+        options: (q?.options || []).map((o) => ({
+          text: o?.text ?? '',
+          image: o?.image ?? '',
+        })),
+        selectedOptionIndex: a.selectedOptionIndex,
+      }
+    },
+  )
+
+  const currentQuestionIndex = Math.min(
+    Number(attempt.currentQuestionIndex ?? 0),
+    Math.max(questions.length, 0),
+  ) // CHANGED: use stored progress pointer only; no answered-count navigation.
+
+  const currentQuestion = questions[currentQuestionIndex] ?? undefined // CHANGED: direct index lookup only.
 
   const timerState = getActiveAttemptTimerState({
     mode: attempt.mode,
     startedAt: attempt.startedAt,
-    totalQuestions: Array.isArray(attempt.answers) ? attempt.answers.length : 0,
+    totalQuestions: questions.length,
   })
 
   return {
@@ -68,6 +88,8 @@ export async function getActiveQuizAttempt(params: {
     showTimer: timerState.showTimer,
     timerState: timerState.showTimer ? timerState : undefined,
     questions,
+    currentQuestionIndex, // CHANGED: explicitly expose the current index.
+    currentQuestion, // CHANGED: explicitly expose the current question.
     quiz: {
       id: quizObj?._id?.toString?.() ?? '',
       name: quizObj?.name ?? 'Quiz',

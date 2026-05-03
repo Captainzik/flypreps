@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { submitAnswerToAttempt } from '@/lib/actions/quizAttempt.actions'
+import { submitAnswerToAttempt } from '@/lib/actions/quizAttempt.submit' // CHANGED: use the corrected submit action path.
 import { connectToDatabase } from '@/lib/db'
 
 type RouteContext = {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   if (!questionId || Number.isNaN(selectedOptionIndex)) {
     return NextResponse.redirect(
-      new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific invalid-form fallback.
+      new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: invalid payload falls back to the attempt page.
     )
   }
 
@@ -40,6 +40,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   })
 
   return NextResponse.redirect(
-    new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific post-submit redirect.
+    new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: redirect back to the attempt page after saving the answer.
   )
 }

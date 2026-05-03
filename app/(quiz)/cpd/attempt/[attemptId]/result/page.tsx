@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { getQuizAttemptResult } from '@/lib/actions/quizAttempt.actions'
+import { getQuizAttemptResult } from '@/lib/actions/quizAttempt.result'
 import QuizReviewForm from '@/components/reviews/quiz-review-form'
 import { QuizResultSummary } from '@/components/results/quiz-result-summary'
 import { QuizResultAnswerCard } from '@/components/results/quiz-result-answer-card'

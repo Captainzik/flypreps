@@ -18,6 +18,7 @@ type AttemptQuestion = {
     text?: string
     image?: string
   }[]
+  selectedOptionIndex?: number
 }
 
 type ActiveAttempt = {
@@ -28,11 +29,9 @@ type ActiveAttempt = {
     name: string
     category: string
   }
-  answers: {
-    questionId: string
-    selectedOptionIndex?: number
-  }[]
   questions: AttemptQuestion[]
+  currentQuestionIndex: number // CHANGED: page navigation is now index-driven.
+  currentQuestion?: AttemptQuestion // CHANGED: direct question from action, no answered-count logic.
 }
 
 export default async function QuizAttemptRunnerPage({ params }: PageProps) {
@@ -52,19 +51,17 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
     notFound()
   }
 
-  const answeredCount = attempt.answers.filter(
-    (a) => typeof a.selectedOptionIndex === 'number',
-  ).length
+  const totalQuestions = attempt.questions.length // CHANGED: total count only; no answered-count logic used.
+  const currentQuestion =
+    attempt.currentQuestion ?? attempt.questions[attempt.currentQuestionIndex] // CHANGED: direct index-based fallback only.
 
-  if (answeredCount >= attempt.questions.length) {
+  if (attempt.currentQuestionIndex >= totalQuestions) {
     await completeQuizAttempt({
       attemptId,
       userId: session.user.id,
-    })
-    redirect(`/cpd/attempt/${attemptId}/result`) // CHANGED: cpd-specific completed-attempt redirect.
+    }) // CHANGED: completion boundary uses index only.
+    redirect(`/cpd/attempt/${attemptId}/result`) // CHANGED: redirect when index reaches the end boundary.
   }
-
-  const currentQuestion = attempt.questions[answeredCount]
 
   if (!currentQuestion) {
     notFound()
@@ -76,8 +73,11 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       startedAt={attempt.startedAt}
       quizName={attempt.quiz.name}
       quizCategory={attempt.quiz.category}
-      questionNumber={answeredCount + 1}
-      totalQuestions={attempt.questions.length}
+      questionNumber={Math.min(
+        attempt.currentQuestionIndex + 1,
+        totalQuestions,
+      )} // CHANGED: display current question number from index.
+      totalQuestions={totalQuestions}
       question={currentQuestion}
       action={`/cpd/attempt/${attemptId}/answer`} // CHANGED: cpd-specific answer endpoint.
       showTimer={attempt.mode === 'exam'}
