@@ -18,6 +18,7 @@ quiz flow
 checkpoints
 resume state
 scoring
+
 Gamification economy
 
 hearts / battery
@@ -27,12 +28,14 @@ streaks
 leagues
 badges
 quests
+
 Monetization
 
 ads
 premium
 ad rewards
 ad frequency rules
+
 Mode rules
 
 Exam mode
@@ -83,7 +86,7 @@ Suggested rules:
 hearts consumed for attempts in CPD
 battery/hearts maybe shared across modes if you want one currency
 ads can refill hearts
-premium bypasses ads and maybe disables heart limits
+premium bypasses ads and disables heart limits
 gems earned through referrals, quests, streaks, rewards
 gems can be exchanged for hearts
 gems can be gifted to friends
@@ -175,17 +178,20 @@ mode system
 session persistence
 checkpoint/resume
 hidden exam results until completion
+
 Phase 2
 hearts/battery
 gem wallet
 XP
 streaks
 basic badges
+
 Phase 3
 ads reward flow
 premium upgrade flow
 referral rewards
 friend gifting
+
 Phase 4
 quests
 timed boosts
@@ -281,3 +287,95 @@ event-driven
 optional to disable in settings
 mobile-friendly
 not too noisy
+
+
+
+
+
+Data model recommendation
+Core idea
+You need one user, many attempts, many rewards, and mode-specific rules.
+
+Add to User
+Your current User already has streak and score fields. I’d extend it with:
+
+hearts
+gems
+xp
+leaguePoints
+premiumTier
+streakFreezeCount
+lastHeartRefillAt
+lastXPAwardAt
+referralCode
+referredBy
+weeklyQuestProgress
+monthlyQuestProgress
+Add to QuizAttempt
+Your current attempt model is a good start, but it needs mode and resumable state.
+
+Add:
+
+mode: 'exam' | 'cpd'
+status: 'in_progress' | 'paused' | 'completed' | 'ended'
+checkpointIndex
+currentQuestionIndex
+resultVisibility: 'hidden_until_end' | 'per_question'
+adsServedCount
+heartsConsumed
+gemsEarned
+xpEarned
+pausedAt
+resumedAt
+endedAt
+resumeToken or sessionKey
+This is essential for:
+
+checkpoints
+resume
+hidden exam results
+CPD per-question feedback
+Add new models
+You will likely need separate models for:
+
+RewardWallet
+Badge
+UserBadge
+Quest
+UserQuestProgress
+League
+UserLeagueStanding
+Checkpoint
+Referral
+AdEvent
+PremiumSubscription
+That lets you scale each system independently.
+
+Migration plan
+Phase 1: mode-aware attempts
+add mode to attempts
+add checkpoint fields
+add result visibility rules
+update quiz attempt flow to save state
+Phase 2: economy
+add hearts and gems to user wallet
+create reward logic
+create ad reward flow
+add premium bypass
+Phase 3: gamification
+streaks
+XP
+badges
+leagues
+quests
+boosters
+Phase 4: UX split
+/exam
+/cpd
+separate dashboards
+separate attempt flows
+What not to do
+Don’t put all of this into one massive quizAttempt object forever.
+Don’t hardcode exam/CPD logic in React components.
+Don’t build badges/quests directly in pages.
+Don’t mix ad logic with scoring logic.

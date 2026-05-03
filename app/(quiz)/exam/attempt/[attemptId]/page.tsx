@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { getActiveQuizAttempt } from '@/lib/actions/quizAttempt.active'
+import { completeQuizAttempt } from '@/lib/actions/quizAttempt.result'
 import { QuizExamAttemptClient } from '@/components/learning/quiz-exam-attempt-client'
 
 type PageProps = {
@@ -57,7 +58,11 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   ).length
 
   if (answeredCount >= attempt.questions.length) {
-    redirect(`/exam/attempt/${attemptId}/result`) // CHANGED: completed attempts go straight to result.
+    await completeQuizAttempt({
+      attemptId,
+      userId: session.user.id,
+    })
+    redirect(`/exam/attempt/${attemptId}/result`)
   }
 
   const currentQuestion = attempt.questions[answeredCount]
