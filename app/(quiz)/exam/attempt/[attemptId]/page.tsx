@@ -45,6 +45,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const attempt = (await getActiveQuizAttempt({
     attemptId,
     userId: session.user.id,
+    expectedMode: 'exam',
   })) as ActiveAttempt | null
 
   if (!attempt) {

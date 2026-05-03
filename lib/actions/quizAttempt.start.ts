@@ -19,6 +19,10 @@ export async function startQuizAttempt(input: {
 
   const { quizId, userId, attemptKey } = input
 
+  if (!input.mode) {
+    throw new Error('Mode is required for starting an attempt from a route')
+  } // CHANGED: require explicit mode so route-driven attempts cannot fall back to the wrong mode.
+
   const quiz = await Quiz.findById(quizId)
     .select('_id questions allowedModes') // CHANGED: only use allowedModes for mode selection.
     .lean()

@@ -38,6 +38,7 @@ export default async function QuizStartPage({ params }: PageProps) {
   const attempt = await startQuizAttempt({
     quizId: quiz._id.toString(),
     userId: session.user.id,
+    mode: 'exam',
   })
 
   redirect(`/exam/attempt/${attempt._id.toString()}`) // CHANGED: exam-specific attempt route.

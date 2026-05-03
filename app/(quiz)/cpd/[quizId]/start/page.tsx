@@ -38,6 +38,7 @@ export default async function QuizStartPage({ params }: PageProps) {
   const attempt = await startQuizAttempt({
     quizId: quiz._id.toString(),
     userId: session.user.id,
+    mode: 'cpd',
   })
 
   redirect(`/cpd/attempt/${attempt._id.toString()}`) // CHANGED: CPD-specific attempt route.

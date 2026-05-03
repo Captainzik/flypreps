@@ -15,6 +15,7 @@ type ActiveAttemptQuestion = {
 export async function getActiveQuizAttempt(params: {
   attemptId: string
   userId: string
+  expectedMode?: 'exam' | 'cpd'
 }) {
   await connectToDatabase()
 
@@ -33,6 +34,13 @@ export async function getActiveQuizAttempt(params: {
     .lean()
 
   if (!attempt || attempt.completed) return null
+
+  if (params.expectedMode && attempt.mode !== params.expectedMode) {
+    // CHANGED: fail fast if the attempt is loaded through the wrong route.
+    throw new Error(
+      `Attempt mode mismatch: expected ${params.expectedMode}, got ${attempt.mode}`,
+    )
+  }
 
   const quizObj = attempt.quiz as unknown as {
     _id: import('mongoose').Types.ObjectId
