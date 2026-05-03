@@ -45,9 +45,10 @@ const data = {
         'Core concepts for ARDMS SPI and Sonography Canada exams – transducers, wave properties, artifacts, Doppler basics',
       image:
         'https://images.unsplash.com/photo-1581593443255-db4646e739b0?w=1200&auto=format&fit=crop&q=80',
-      category: 'ARDMS',
-      tags: ['Sonography'],
+      category: 'Sonography',
+      allowedModes: ['exam', 'cpd'],
       isPublished: true,
+      tags: ['ARDMS', 'Sonography Canada'],
     },
     {
       name: 'Chest & Thoracic Radiography Essentials',
@@ -55,9 +56,10 @@ const data = {
         'Key chest X-ray findings, signs, and patterns for ARRT Radiography exam preparation',
       image:
         'https://images.unsplash.com/photo-1581593443255-db4646e739b0?w=1200&auto=format&fit=crop&q=80',
-      category: 'ARRT',
-      tags: ['Radiography'],
+      category: 'Radiography',
+      allowedModes: ['exam', 'cpd'],
       isPublished: true,
+      tags: ['ARRT'],
     },
     {
       name: 'Radiation Protection & Safety Fundamentals',
@@ -65,9 +67,10 @@ const data = {
         'Radiation biology, protection principles, ALARA, shielding, and regulatory concepts for CAMRT',
       image:
         'https://images.unsplash.com/photo-1581593443255-db4646e739b0?w=1200&auto=format&fit=crop&q=80',
-      category: 'CAMRT',
-      tags: ['Radiography'],
+      category: 'Radiography',
+      allowedModes: ['exam', 'cpd'],
       isPublished: true,
+      tags: ['CAMRT'],
     },
   ],
 
@@ -486,7 +489,7 @@ const data = {
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
       role: 'user',
       isVerified: true,
-      favoriteCategories: ['ARDMS', 'Sonography Canada'],
+      favoriteCategories: ['Radiography', 'Sonography'],
       lifetimeTotalScore: 1850,
     },
     {
@@ -498,7 +501,7 @@ const data = {
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
       role: 'user',
       isVerified: true,
-      favoriteCategories: ['ARRT', 'CAMRT'],
+      favoriteCategories: ['Radiography', 'Sonography'],
       lifetimeTotalScore: 1420,
     },
     {
@@ -510,7 +513,7 @@ const data = {
         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
       role: 'user',
       isVerified: true,
-      favoriteCategories: ['CAMRT'],
+      favoriteCategories: ['Radiography', 'Sonography'],
       lifetimeTotalScore: 960,
     },
     {
@@ -594,7 +597,7 @@ const data = {
       averagePercentage: 88.5,
       bestPercentage: 96,
       lastAttemptAt: new Date('2025-03-05T14:30:00Z'),
-      categoryScores: { ARDMS: 620, 'Sonography Canada': 230 },
+      categoryScores: { Radiography: 620, Sonography: 230 },
     },
     {
       period: '2025-week-10',
@@ -604,7 +607,7 @@ const data = {
       averagePercentage: 82,
       bestPercentage: 94,
       lastAttemptAt: new Date('2025-03-06T09:15:00Z'),
-      categoryScores: { ARRT: 500, CAMRT: 220 },
+      categoryScores: { Radiography: 500, Sonography: 220 },
     },
     {
       period: '2025-week-10',
@@ -614,7 +617,7 @@ const data = {
       averagePercentage: 78,
       bestPercentage: 89,
       lastAttemptAt: new Date('2025-03-07T11:45:00Z'),
-      categoryScores: { CAMRT: 680 },
+      categoryScores: { Radiography: 680 },
     },
 
     // Week 11 – Global
@@ -626,7 +629,7 @@ const data = {
       averagePercentage: 90.2,
       bestPercentage: 98,
       lastAttemptAt: new Date('2025-03-12T16:20:00Z'),
-      categoryScores: { ARDMS: 700, 'Sonography Canada': 220 },
+      categoryScores: { Radiography: 700, Sonography: 220 },
     },
     {
       period: '2025-week-11',
@@ -636,7 +639,7 @@ const data = {
       averagePercentage: 85,
       bestPercentage: 93,
       lastAttemptAt: new Date('2025-03-13T08:50:00Z'),
-      categoryScores: { ARRT: 550, CAMRT: 240 },
+      categoryScores: { Radiography: 550, Sonography: 240 },
     },
 
     // Month 03 – Global
@@ -648,7 +651,7 @@ const data = {
       averagePercentage: 89,
       bestPercentage: 98,
       lastAttemptAt: new Date('2025-03-20T13:10:00Z'),
-      categoryScores: { ARDMS: 1800, 'Sonography Canada': 650 },
+      categoryScores: { Radiography: 1800, Sonography: 650 },
     },
     {
       period: '2025-month-03',
@@ -658,7 +661,7 @@ const data = {
       averagePercentage: 84,
       bestPercentage: 94,
       lastAttemptAt: new Date('2025-03-25T10:30:00Z'),
-      categoryScores: { ARRT: 1300, CAMRT: 680 },
+      categoryScores: { Radiography: 1300, Sonography: 680 },
     },
     // ... you can add more entries as needed
   ],

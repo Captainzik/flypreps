@@ -40,7 +40,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/exam/attempt/${attemptId}`) // CHANGED: exam-specific auth callback path.
+    redirect(`/signin?callbackUrl=/exam/attempt/${attemptId}`) // CHANGED: exam-specific auth callback path.
   }
 
   const attempt = (await getActiveQuizAttempt({
@@ -61,7 +61,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       attemptId,
       userId: session.user.id,
     })
-    redirect(`/quiz/exam/attempt/${attemptId}/result`) // CHANGED: exam-specific completed-attempt redirect.
+    redirect(`/exam/attempt/${attemptId}/result`) // CHANGED: exam-specific completed-attempt redirect.
   }
 
   const currentQuestion = attempt.questions[answeredCount]
@@ -79,7 +79,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       questionNumber={answeredCount + 1}
       totalQuestions={attempt.questions.length}
       question={currentQuestion}
-      action={`/quiz/exam/attempt/${attemptId}/answer`} // CHANGED: exam-specific answer endpoint.
+      action={`/exam/attempt/${attemptId}/answer`} // CHANGED: exam-specific answer endpoint.
       showTimer={attempt.mode === 'exam'}
     />
   )

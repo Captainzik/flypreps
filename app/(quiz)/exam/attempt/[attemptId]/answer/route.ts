@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   if (!questionId || Number.isNaN(selectedOptionIndex)) {
     return NextResponse.redirect(
-      new URL(`/quiz/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific invalid-form fallback.
+      new URL(`/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific invalid-form fallback.
     )
   }
 
@@ -40,6 +40,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   })
 
   return NextResponse.redirect(
-    new URL(`/quiz/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific post-submit redirect.
+    new URL(`/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific post-submit redirect.
   )
 }

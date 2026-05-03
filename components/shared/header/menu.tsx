@@ -36,11 +36,11 @@ async function LogoutButton() {
 function buildItems(isAdmin: boolean): NavItem[] {
   return [
     {
-      href: '/quiz',
+      href: '/dashboard',
       label: 'Quiz',
       icon: <BookOpenCheck className='h-4 w-4' />,
     },
-    { href: '/quiz/history', label: 'Stats' },
+    { href: '/dashboard/history', label: 'Stats' },
     { href: '/leaderboard', label: 'Leaderboard' },
     { href: '/feed', label: 'Feed' },
     { href: '/profile', label: 'Profile' },
@@ -67,7 +67,7 @@ function DesktopMenu({
           Sign in
         </Link>
         <Link
-          href='/quiz'
+          href='/dashboard'
           className='header-button flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 sm:px-3'
         >
           <BookOpenCheck className='h-4 w-4 sm:h-5 sm:w-5' />
@@ -140,7 +140,7 @@ export default async function Menu() {
                   Sign in
                 </Link>
                 <Link
-                  href='/quiz'
+                  href='/dashboard'
                   className='header-button flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
                 >
                   <BookOpenCheck className='h-4 w-4' />

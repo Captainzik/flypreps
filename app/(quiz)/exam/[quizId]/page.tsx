@@ -35,7 +35,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
   const session = await auth()
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/exam/${quizId}`) // CHANGED: exam-specific auth callback path.
+    redirect(`/signin?callbackUrl=/exam/${quizId}`) // CHANGED: exam-specific auth callback path.
   }
 
   const quiz = (await Quiz.findById(quizId)
@@ -119,7 +119,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
         <div className='mt-6 flex flex-wrap gap-3'>
           {canStart ? (
             <Link
-              href={`/quiz/exam/${quiz._id.toString()}/start`} // CHANGED: exam-specific start route.
+              href={`/exam/${quiz._id.toString()}/start`} // CHANGED: exam-specific start route.
               className='inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
             >
               Start quiz
@@ -135,7 +135,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           )}
 
           <Link
-            href='/quiz/exam/start'
+            href='/exam/start'
             className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
           >
             Back to quizzes

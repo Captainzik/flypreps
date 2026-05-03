@@ -40,7 +40,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/cpd/attempt/${attemptId}`) // CHANGED: cpd-specific auth callback path.
+    redirect(`/signin?callbackUrl=/cpd/attempt/${attemptId}`) // CHANGED: cpd-specific auth callback path.
   }
 
   const attempt = (await getActiveQuizAttempt({
@@ -61,7 +61,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       attemptId,
       userId: session.user.id,
     })
-    redirect(`/quiz/cpd/attempt/${attemptId}/result`) // CHANGED: cpd-specific completed-attempt redirect.
+    redirect(`/cpd/attempt/${attemptId}/result`) // CHANGED: cpd-specific completed-attempt redirect.
   }
 
   const currentQuestion = attempt.questions[answeredCount]
@@ -79,7 +79,7 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
       questionNumber={answeredCount + 1}
       totalQuestions={attempt.questions.length}
       question={currentQuestion}
-      action={`/quiz/cpd/attempt/${attemptId}/answer`} // CHANGED: cpd-specific answer endpoint.
+      action={`/cpd/attempt/${attemptId}/answer`} // CHANGED: cpd-specific answer endpoint.
       showTimer={attempt.mode === 'exam'}
     />
   )

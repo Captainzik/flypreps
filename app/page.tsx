@@ -28,19 +28,19 @@ export default function HomePage() {
         {/* CHANGED: action buttons wrap naturally on narrow screens and keep full tap targets. */}
         <div className='mt-6 flex flex-wrap gap-3'>
           <Link
-            href='/quiz'
+            href='/dashboard'
             className='rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
           >
             CAMRT
           </Link>
           <Link
-            href='/quiz'
+            href='/dashboard'
             className='rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
           >
             ARDMS
           </Link>
           <Link
-            href='/quiz'
+            href='/dashboard'
             className='rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
           >
             Sonography Canada

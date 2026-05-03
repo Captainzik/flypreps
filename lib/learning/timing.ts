@@ -1,4 +1,4 @@
-import type { QuizMode } from '@/lib/modes/types' // CHANGED: timing helpers are mode-aware but remain UI-agnostic.
+import type { QuizMode } from '@/lib/modes/types'
 
 export function formatDuration(ms: number) {
   const safeMs = Math.max(0, ms)
@@ -18,10 +18,16 @@ export function formatDuration(ms: number) {
 export function formatCountdown(ms: number) {
   const safeMs = Math.max(0, ms)
   const totalSeconds = Math.ceil(safeMs / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
+
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
 
-  return `${minutes}:${String(seconds).padStart(2, '0')}` // CHANGED: used for live exam countdown display.
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
 export function getElapsedMs(startedAt: Date, endedAt = new Date()) {
@@ -30,11 +36,11 @@ export function getElapsedMs(startedAt: Date, endedAt = new Date()) {
 
 export function getQuestionTimeLimitMs(mode: QuizMode) {
   if (mode !== 'exam') return undefined
-  return 60_000 // CHANGED: exam mode enforces 1 question per minute.
+  return 30_000
 }
 
 export function getExamCheckpointDeadlineMs(totalQuestions: number) {
-  return Math.max(1, totalQuestions) * 60_000 // CHANGED: 10 questions = 10 minutes checkpoint/break window.
+  return Math.max(1, totalQuestions) * 30_000
 }
 
 export function shouldForceExamTimeout(params: {
@@ -79,10 +85,10 @@ export function getActiveAttemptTimerState(params: {
   const remainingMs = Math.max(0, totalMs - elapsedMs)
 
   return {
-    showTimer: true, // CHANGED: only exam mode should render a running timer in the UI.
+    showTimer: true,
     remainingMs,
     totalMs,
     expired: remainingMs === 0,
-    countdownLabel: formatCountdown(remainingMs), // CHANGED: ready-to-render label for the UI.
+    countdownLabel: formatCountdown(remainingMs),
   }
 }

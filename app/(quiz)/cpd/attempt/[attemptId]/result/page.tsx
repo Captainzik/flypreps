@@ -44,7 +44,7 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
 
   const session = await auth()
   if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/quiz/cpd/attempt/${attemptId}/result`) // CHANGED: cpd-specific auth callback path.
+    redirect(`/signin?callbackUrl=/cpd/attempt/${attemptId}/result`) // CHANGED: cpd-specific auth callback path.
   }
 
   let result: QuizAttemptResult

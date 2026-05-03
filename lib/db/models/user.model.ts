@@ -86,7 +86,7 @@ const UserSchema = new Schema<IUser>(
       type: [
         {
           type: String,
-          enum: ['ARDMS', 'Sonography Canada', 'CAMRT', 'ARRT', 'CPD'],
+          enum: ['Radiography', 'Sonography'],
         },
       ],
       default: [],

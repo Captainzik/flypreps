@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   if (!questionId || Number.isNaN(selectedOptionIndex)) {
     return NextResponse.redirect(
-      new URL(`/quiz/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific invalid-form fallback.
+      new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific invalid-form fallback.
     )
   }
 
@@ -40,6 +40,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   })
 
   return NextResponse.redirect(
-    new URL(`/quiz/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific post-submit redirect.
+    new URL(`/cpd/attempt/${attemptId}`, req.url), // CHANGED: cpd-specific post-submit redirect.
   )
 }

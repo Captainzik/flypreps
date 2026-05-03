@@ -109,7 +109,7 @@ export default async function CpdHistoryPage() {
 
                 {item.quizId ? (
                   <Link
-                    href={`/quiz/cpd/${item.quizId}`}
+                    href={`/cpd/${item.quizId}`}
                     className='inline-flex rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
                   >
                     Quiz details
