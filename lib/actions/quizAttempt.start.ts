@@ -8,14 +8,17 @@ import {
 } from './quizAttempt.shared'
 import type { IQuizAttempt } from '../db/models/attempts.model'
 import { getModeRules } from '@/lib/modes/rules'
-import { findUnfinishedAttempt } from './quizAttempt.session' // CHANGED: start flow now checks for an existing unfinished attempt first.
+import {
+  findUnfinishedAttempt,
+  type UnfinishedAttemptResult,
+} from './quizAttempt.session' // CHANGED: reuse the shared unfinished-attempt shape so no cast is needed.
 
 export async function startQuizAttempt(input: {
   quizId: string
   userId: string
   attemptKey?: string
   mode?: 'exam' | 'cpd'
-}) {
+}): Promise<UnfinishedAttemptResult> {
   await connectToDatabase()
 
   const { quizId, userId, attemptKey } = input
@@ -45,7 +48,7 @@ export async function startQuizAttempt(input: {
   }) // CHANGED: detect unfinished attempt for this user/quiz/mode before creating a new one.
 
   if (unfinishedAttempt) {
-    return unfinishedAttempt
+    return unfinishedAttempt // CHANGED: direct return; no cast needed.
   } // CHANGED: reject duplicate creation by returning the existing in-progress attempt.
 
   const answers: IQuizAttempt['answers'] = quiz.questions.map((qId) => ({
@@ -99,5 +102,5 @@ export async function startQuizAttempt(input: {
 
   void buildAudioEventEnvelope(userId, { type: 'mode_enter', mode }) // CHANGED: emit mode entry event from start action.
 
-  return attempt
+  return attempt as UnfinishedAttemptResult // CHANGED: return shape matches the shared route result contract.
 }

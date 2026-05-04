@@ -11,6 +11,13 @@ import { getModeRules } from '@/lib/modes/rules'
 
 export type QuizMode = 'exam' | 'cpd'
 
+export type UnfinishedAttemptResult = {
+  _id: { toString(): string }
+  checkpointIndex?: number
+  status?: string
+} & Pick<IQuizAttempt, 'user' | 'quiz' | 'mode' | 'completed' | 'startedAt'>
+// CHANGED: exported reusable shape for resume/start routing.
+
 export function getCheckpointResumeQuestionIndex(params: {
   answeredCount: number
   checkpointSize?: number
@@ -37,7 +44,7 @@ export async function findUnfinishedAttempt(params: {
   userId: string
   quizId: string
   mode: QuizMode
-}): Promise<IQuizAttempt | null> {
+}): Promise<UnfinishedAttemptResult | null> {
   await connectToDatabase()
 
   const attempt = await QuizAttempt.findOne({
@@ -48,9 +55,10 @@ export async function findUnfinishedAttempt(params: {
     status: { $in: ['in_progress', 'paused'] },
   })
     .sort({ lastCheckpointAt: -1, updatedAt: -1, _id: -1 })
+    .select('_id user quiz mode completed startedAt checkpointIndex status')
     .lean()
 
-  return attempt as IQuizAttempt | null
+  return attempt as UnfinishedAttemptResult | null // CHANGED: explicit lean result shape for caller reuse.
 }
 
 export async function startFreshAttempt(params: {
