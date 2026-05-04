@@ -8,6 +8,7 @@ import {
 } from './quizAttempt.shared'
 import type { IQuizAttempt } from '../db/models/attempts.model'
 import { getModeRules } from '@/lib/modes/rules'
+import { findUnfinishedAttempt } from './quizAttempt.session' // CHANGED: start flow now checks for an existing unfinished attempt first.
 
 export async function startQuizAttempt(input: {
   quizId: string
@@ -24,7 +25,7 @@ export async function startQuizAttempt(input: {
   } // CHANGED: require explicit mode so route-driven attempts cannot fall back to the wrong mode.
 
   const quiz = await Quiz.findById(quizId)
-    .select('_id questions allowedModes') // CHANGED: only use allowedModes for mode selection.
+    .select('_id questions allowedModes')
     .lean()
 
   if (!quiz) throw new Error('Quiz not found')
@@ -34,8 +35,18 @@ export async function startQuizAttempt(input: {
 
   const mode = getAttemptMode({
     mode: input.mode,
-    allowedModes: quiz.allowedModes as Array<'exam' | 'cpd'> | undefined, // CHANGED: no category fallback.
+    allowedModes: quiz.allowedModes as Array<'exam' | 'cpd'> | undefined,
   })
+
+  const unfinishedAttempt = await findUnfinishedAttempt({
+    userId,
+    quizId,
+    mode,
+  }) // CHANGED: detect unfinished attempt for this user/quiz/mode before creating a new one.
+
+  if (unfinishedAttempt) {
+    return unfinishedAttempt
+  } // CHANGED: reject duplicate creation by returning the existing in-progress attempt.
 
   const answers: IQuizAttempt['answers'] = quiz.questions.map((qId) => ({
     question: qId,
@@ -72,6 +83,8 @@ export async function startQuizAttempt(input: {
     currentQuestionIndex: 0,
     checkpointIndex: 0,
     checkpointSavedAt: now,
+    lastCheckpointAt: now, // CHANGED: initialize resumable checkpoint timestamp for new attempts.
+    lastSeenQuestionIndex: 0, // CHANGED: start from the beginning with zero-based indexing.
     questionTimeLimitMs,
     checkpointDeadlineMs,
     timedOut: false,

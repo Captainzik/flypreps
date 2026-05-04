@@ -71,12 +71,19 @@ export async function getActiveQuizAttempt(params: {
     },
   )
 
-  const currentQuestionIndex = Math.min(
-    Number(attempt.currentQuestionIndex ?? 0),
-    Math.max(questions.length, 0),
-  ) // CHANGED: use stored progress pointer only; no answered-count navigation.
+  const answeredCount = (attempt.answers || []).filter(
+    (a) => typeof a.selectedOptionIndex === 'number',
+  ).length
 
-  const currentQuestion = questions[currentQuestionIndex] ?? undefined // CHANGED: direct index lookup only.
+  const checkpointIndex = Math.max(
+    0,
+    Math.min(Number(attempt.checkpointIndex ?? 0), questions.length - 1),
+  ) // CHANGED: use checkpointIndex as the resume anchor instead of currentQuestionIndex.
+
+  const currentQuestionIndex = Number(
+    attempt.currentQuestionIndex ?? checkpointIndex,
+  ) // CHANGED: keep currentQuestionIndex as metadata, but fall back to checkpointIndex for compatibility.
+  const currentQuestion = questions[checkpointIndex] ?? undefined // CHANGED: render the resumed question from the stored checkpoint boundary.
 
   const timerState = getActiveAttemptTimerState({
     mode: attempt.mode,
@@ -93,11 +100,12 @@ export async function getActiveQuizAttempt(params: {
     timeTakenMs: attempt.timeTakenMs,
     questionTimeLimitMs: attempt.questionTimeLimitMs,
     checkpointDeadlineMs: attempt.checkpointDeadlineMs,
+    checkpointIndex, // CHANGED: explicitly expose the checkpoint boundary for resume rendering.
     showTimer: timerState.showTimer,
     timerState: timerState.showTimer ? timerState : undefined,
     questions,
-    currentQuestionIndex, // CHANGED: explicitly expose the current index.
-    currentQuestion, // CHANGED: explicitly expose the current question.
+    currentQuestionIndex, // CHANGED: retained as progress metadata only.
+    currentQuestion, // CHANGED: this now reflects the checkpoint-based resume question.
     quiz: {
       id: quizObj?._id?.toString?.() ?? '',
       name: quizObj?.name ?? 'Quiz',
@@ -111,6 +119,7 @@ export async function getActiveQuizAttempt(params: {
         )?._id?.toString?.() ?? '',
       selectedOptionIndex: a.selectedOptionIndex,
     })),
+    answeredCount, // CHANGED: retained for display/diagnostics, not resume logic.
     completed: attempt.completed,
   }
 }

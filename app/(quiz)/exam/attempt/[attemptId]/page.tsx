@@ -24,6 +24,7 @@ type ActiveAttempt = {
   _id: { toString(): string }
   mode: 'exam' | 'cpd'
   startedAt: Date
+  checkpointIndex?: number // CHANGED: resume should be driven by the persisted checkpoint boundary.
   quiz: {
     name: string
     category: string
@@ -61,15 +62,26 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
     await completeQuizAttempt({
       attemptId,
       userId: session.user.id,
-    })
+    }) // CHANGED: finalize the attempt before redirecting to results.
     redirect(`/exam/attempt/${attemptId}/result`)
   }
 
-  const currentQuestion = attempt.questions[answeredCount]
+  const resumeIndex = Math.max(
+    0,
+    Math.min(
+      attempt.questions.length - 1,
+      typeof attempt.checkpointIndex === 'number' ? attempt.checkpointIndex : 0,
+    ),
+  ) // CHANGED: resume from the saved checkpoint boundary, not from answeredCount.
+
+  const currentQuestion =
+    attempt.questions[resumeIndex] ?? attempt.questions[answeredCount]
 
   if (!currentQuestion) {
     notFound()
   }
+
+  const currentQuestionNumber = resumeIndex + 1 // CHANGED: display stays synchronized with the resumed question position.
 
   return (
     <QuizExamAttemptClient
@@ -79,10 +91,10 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
         attempt.startedAt instanceof Date
           ? attempt.startedAt.toISOString()
           : new Date(attempt.startedAt).toISOString()
-      } // CHANGED: serializable ISO string for the client component.
+      } // CHANGED: serializable ISO string keeps client timer synchronous with backend start time.
       quizName={attempt.quiz.name}
       quizCategory={attempt.quiz.category}
-      questionNumber={answeredCount + 1}
+      questionNumber={currentQuestionNumber}
       totalQuestions={attempt.questions.length}
       question={currentQuestion}
       action={`/exam/attempt/${attemptId}/answer`} // CHANGED: exam-specific answer endpoint.

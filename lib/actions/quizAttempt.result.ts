@@ -66,7 +66,7 @@ export async function completeQuizAttempt(
     }
 
     const quiz = await Quiz.findById(attempt.quiz)
-      .select('_id questions allowedModes category') // CHANGED: include allowedModes so mode detection no longer depends on category.
+      .select('_id questions allowedModes category')
       .populate('questions')
       .lean()
       .session(session)
@@ -74,7 +74,7 @@ export async function completeQuizAttempt(
     if (!quiz) throw new Error('Quiz not found')
 
     const mode =
-      attempt.mode || getAttemptMode({ allowedModes: quiz.allowedModes }) // CHANGED: remove quizCategory fallback entirely.
+      attempt.mode || getAttemptMode({ allowedModes: quiz.allowedModes })
     const modeRules = getModeRules(mode)
     const populatedQuestions = quiz.questions as unknown as IQuestion[]
     const questionMap = new Map(
@@ -130,12 +130,16 @@ export async function completeQuizAttempt(
     attempt.timeTakenMs = timeTakenMs
     attempt.status = forceTimeout ? 'ended' : 'completed'
     attempt.endedAt = forceTimeout ? completedAt : attempt.endedAt
+    attempt.endedReason = forceTimeout ? 'timeout' : 'completed' // CHANGED: keep terminal state explicit and consistent with checkpoint flow.
     attempt.resultVisibility = modeRules.resultVisibility
     attempt.timedOut = forceTimeout
     attempt.forceCompletedByTimeout = forceTimeout
     attempt.questionsAnswered = gradedAnswers.length
     attempt.category = quiz.category
     attempt.xpEarned = computeAttemptXp({ mode, score, maxScore, percentage })
+    attempt.checkpointIndex = attempt.questionsAnswered // CHANGED: final completion aligns checkpoint state with the finished attempt.
+    attempt.checkpointSavedAt = completedAt // CHANGED: completed attempts carry the final checkpoint timestamp.
+    attempt.lastCheckpointAt = completedAt // CHANGED: keep last checkpoint timing aligned at completion.
 
     await attempt.save({ session })
 

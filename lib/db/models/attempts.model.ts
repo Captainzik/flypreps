@@ -5,6 +5,13 @@ import type {
   SessionStatus,
 } from '@/lib/modes/types' // CHANGED: attempts now explicitly track mode and timer-driven session status.
 
+export type AttemptEndReason =
+  | 'user_ended'
+  | 'restart_requested'
+  | 'completed'
+  | 'timeout'
+  | 'system_cleanup' // CHANGED: allows exact cleanup/discard semantics.
+
 export interface IQuizAttempt {
   user: Types.ObjectId
   quiz: Types.ObjectId
@@ -16,6 +23,7 @@ export interface IQuizAttempt {
   pausedAt?: Date
   resumedAt?: Date
   endedAt?: Date
+  endedReason?: AttemptEndReason // CHANGED: records why the session ended or was discarded.
   timeTakenMs?: number
   questionTimeLimitMs?: number // CHANGED: stored for exam-mode timer enforcement.
   checkpointDeadlineMs?: number // CHANGED: stored for checkpoint/break timing logic.
@@ -25,10 +33,13 @@ export interface IQuizAttempt {
   maxScore: number
   percentage: number
   attemptKey?: string
+  sessionKey?: string // CHANGED: stable session identity for resume/discard flows.
   completed: boolean
   questionsAnswered: number
   currentQuestionIndex: number // CHANGED: exact current position for resume.
-  checkpointIndex: number // CHANGED: exact checkpoint position for resume/break.
+  checkpointIndex: number // CHANGED: zero-based checkpoint boundary for resume/break.
+  lastCheckpointAt?: Date // CHANGED: tracks the last persisted checkpoint boundary.
+  lastSeenQuestionIndex?: number // CHANGED: tracks the furthest question the user actually reached.
   checkpointSavedAt?: Date
   adsServedCount: number
   heartsConsumed: number
@@ -103,6 +114,17 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       type: Date,
       index: true,
     },
+    endedReason: {
+      type: String,
+      enum: [
+        'user_ended',
+        'restart_requested',
+        'completed',
+        'timeout',
+        'system_cleanup',
+      ],
+      index: true,
+    }, // CHANGED: stores exact terminal cause.
     timeTakenMs: {
       type: Number,
       min: 0,
@@ -144,6 +166,11 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       type: String,
       trim: true,
     },
+    sessionKey: {
+      type: String,
+      trim: true,
+      index: true,
+    }, // CHANGED: separate session identity for resumable exam runs.
     completed: {
       type: Boolean,
       default: false,
@@ -164,6 +191,16 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
       min: 0,
       default: 0,
     },
+    lastCheckpointAt: {
+      type: Date,
+      index: true,
+    }, // CHANGED: last safe checkpoint save time.
+    lastSeenQuestionIndex: {
+      type: Number,
+      min: 0,
+      default: 0,
+      index: true,
+    }, // CHANGED: last question the user actually reached.
     checkpointSavedAt: {
       type: Date,
     },
@@ -236,10 +273,15 @@ QuizAttemptSchema.index({ user: 1, quiz: 1 })
 QuizAttemptSchema.index({ quiz: 1, completed: 1, score: -1 })
 QuizAttemptSchema.index({ user: 1, completedAt: -1 })
 QuizAttemptSchema.index({ user: 1, mode: 1, status: 1 })
+QuizAttemptSchema.index({ user: 1, quiz: 1, mode: 1, status: 1 }) // CHANGED: lets us find unfinished attempts per mode quickly.
 QuizAttemptSchema.index(
   { user: 1, quiz: 1, attemptKey: 1 },
   { unique: true, sparse: true },
 )
+QuizAttemptSchema.index(
+  { user: 1, quiz: 1, sessionKey: 1 },
+  { unique: true, sparse: true },
+) // CHANGED: prevents duplicate sessions for the same attempt identity.
 
 QuizAttemptSchema.virtual('durationMinutes').get(function () {
   if (!this.completedAt || !this.startedAt) return 0

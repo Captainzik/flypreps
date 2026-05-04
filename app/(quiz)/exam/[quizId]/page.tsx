@@ -4,6 +4,7 @@ import { Types } from 'mongoose'
 import { auth } from '@/auth'
 import { Quiz } from '@/lib/db/models/quiz.model'
 import { Question } from '@/lib/db/models/question.model'
+import { QuizAttempt } from '@/lib/db/models/attempts.model' // CHANGED: needed to detect unfinished attempts for resume prompt.
 import MediaPreview from '@/components/shared/media-preview'
 import { QUIZ_MEDIA_BOX_CLASS, QUIZ_MEDIA_SIZES } from '@/lib/constants/media'
 import { connectToDatabase } from '@/lib/db'
@@ -28,6 +29,13 @@ type QuizDetails = {
   isPublished?: boolean
   questions: Types.ObjectId[]
 }
+
+type ActiveAttemptSummary = {
+  _id: Types.ObjectId
+  checkpointIndex?: number
+  questionsAnswered?: number
+  status?: string
+} // CHANGED: lightweight shape for resume prompt rendering.
 
 export default async function QuizDetailsPage({ params }: PageProps) {
   await connectToDatabase()
@@ -57,6 +65,18 @@ export default async function QuizDetailsPage({ params }: PageProps) {
   })
 
   const canStart = questionCount > 0 && publishedQuestionCount > 0
+
+  const unfinishedAttempt = (await QuizAttempt.findOne({
+    user: session.user.id,
+    quiz: quiz._id,
+    mode: 'exam',
+    completed: false,
+    status: { $in: ['in_progress', 'paused'] },
+  })
+    .select('_id checkpointIndex questionsAnswered status')
+    .lean()) as ActiveAttemptSummary | null // CHANGED: detect unfinished attempt for resume prompt.
+
+  const hasResumeableAttempt = Boolean(unfinishedAttempt?._id)
 
   return (
     <main className='space-y-4 sm:space-y-6'>
@@ -116,6 +136,40 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
+        {hasResumeableAttempt ? (
+          <div className='mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30'>
+            <p className='text-sm font-medium text-amber-900 dark:text-amber-100'>
+              You have an unfinished exam attempt.
+            </p>
+            <p className='mt-1 text-sm text-amber-800 dark:text-amber-200'>
+              You can resume from your last saved checkpoint or start a fresh
+              attempt.
+            </p>
+
+            <div className='mt-4 flex flex-wrap gap-3'>
+              <Link
+                href={`/exam/attempt/${unfinishedAttempt!._id.toString()}`}
+                className='inline-flex items-center justify-center rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-500 dark:bg-amber-500 dark:hover:bg-amber-400' // CHANGED: resume existing attempt directly.
+              >
+                Resume attempt
+              </Link>
+
+              <Link
+                href={`/exam/${quiz._id.toString()}/start`}
+                className='inline-flex items-center justify-center rounded-md border border-amber-300 px-4 py-2 text-sm font-medium text-amber-900 transition hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900/40' // CHANGED: allow starting a fresh attempt explicitly.
+              >
+                Start fresh attempt
+              </Link>
+            </div>
+
+            {typeof unfinishedAttempt?.checkpointIndex === 'number' ? (
+              <p className='mt-3 text-xs text-amber-700 dark:text-amber-300'>
+                Resume point: question {unfinishedAttempt.checkpointIndex + 1}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className='mt-6 flex flex-wrap gap-3'>
           {canStart ? (
             <Link
@@ -136,7 +190,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
           <Link
             href='/exam/start'
-            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700'
+            className='inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
           >
             Back to quizzes
           </Link>

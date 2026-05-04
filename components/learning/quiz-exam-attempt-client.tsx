@@ -64,7 +64,7 @@ export function QuizExamAttemptClient({
   return (
     <QuizActiveAttemptShell
       mode={mode}
-      startedAt={new Date(startedAt)}
+      startedAt={new Date(startedAt)} // CHANGED: pass the server timestamp directly; no ref needed during render.
       quizName={quizName}
       quizCategory={quizCategory}
       questionNumber={questionNumber}
