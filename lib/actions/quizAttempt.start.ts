@@ -10,15 +10,15 @@ import type { IQuizAttempt } from '../db/models/attempts.model'
 import { getModeRules } from '@/lib/modes/rules'
 import {
   findUnfinishedAttempt,
-  type UnfinishedAttemptResult,
-} from './quizAttempt.session' // CHANGED: reuse the shared unfinished-attempt shape so no cast is needed.
+  type AttemptSessionResult, // CHANGED: use the shared session/start result shape.
+} from './quizAttempt.session'
 
 export async function startQuizAttempt(input: {
   quizId: string
   userId: string
   attemptKey?: string
   mode?: 'exam' | 'cpd'
-}): Promise<UnfinishedAttemptResult> {
+}): Promise<AttemptSessionResult> {
   await connectToDatabase()
 
   const { quizId, userId, attemptKey } = input
@@ -68,7 +68,7 @@ export async function startQuizAttempt(input: {
     ? modeRules.checkpointIntervalMinutes * 60_000
     : undefined
 
-  const attempt = await QuizAttempt.create({
+  const attempt = (await QuizAttempt.create({
     user: userId,
     quiz: quiz._id,
     mode,
@@ -98,9 +98,9 @@ export async function startQuizAttempt(input: {
     xpEarned: 0,
     answers,
     // CHANGED: category stays for display/history metadata only, not mode detection.
-  })
+  })) as AttemptSessionResult // CHANGED: Mongoose create needs a final explicit shape for the shared contract.
 
   void buildAudioEventEnvelope(userId, { type: 'mode_enter', mode }) // CHANGED: emit mode entry event from start action.
 
-  return attempt as UnfinishedAttemptResult // CHANGED: return shape matches the shared route result contract.
+  return attempt
 }

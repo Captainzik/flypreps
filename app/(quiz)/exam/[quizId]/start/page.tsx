@@ -1,8 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { Quiz } from '@/lib/db/models/quiz.model'
-import { startQuizAttempt } from '@/lib/actions/quizAttempt.actions'
-import { QuizAttempt } from '@/lib/db/models/attempts.model' // CHANGED: needed to detect an existing unfinished attempt before creating a new one.
+import { startQuizAttempt } from '@/lib/actions/quizAttempt.start'
 import { connectToDatabase } from '@/lib/db'
 
 type PageProps = {
@@ -15,12 +14,6 @@ type QuizStartRow = {
   _id: { toString(): string }
   isPublished?: boolean
 }
-
-type ExistingAttemptRow = {
-  _id: { toString(): string }
-  checkpointIndex?: number
-  status?: string
-} // CHANGED: lightweight shape for reuse checks.
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -40,20 +33,6 @@ export default async function QuizStartPage({ params }: PageProps) {
 
   if (!quiz || !quiz.isPublished) {
     notFound()
-  }
-
-  const unfinishedAttempt = (await QuizAttempt.findOne({
-    user: session.user.id,
-    quiz: quiz._id,
-    mode: 'exam',
-    completed: false,
-    status: { $in: ['in_progress', 'paused'] },
-  })
-    .select('_id checkpointIndex status')
-    .lean()) as ExistingAttemptRow | null // CHANGED: check for a paused/in-progress attempt first.
-
-  if (unfinishedAttempt?._id) {
-    redirect(`/exam/attempt/${unfinishedAttempt._id.toString()}`) // CHANGED: reuse the unfinished attempt instead of creating a duplicate.
   }
 
   const attempt = await startQuizAttempt({
