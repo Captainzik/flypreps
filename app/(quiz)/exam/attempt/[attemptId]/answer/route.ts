@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { submitAnswerToAttempt } from '@/lib/actions/quizAttempt.actions'
-import { connectToDatabase } from '@/lib/db'
+import {
+  connectToDatabase,
+  QuizAttempt,
+} from '@/lib/actions/quizAttempt.shared' // CHANGED: import QuizAttempt to validate resume state explicitly.
 
 type RouteContext = {
   params: Promise<{
@@ -32,6 +35,20 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     )
   }
 
+  const attempt = await QuizAttempt.findOne({
+    _id: attemptId,
+    user: session.user.id,
+    mode: 'exam', // CHANGED: ensure this answer submission belongs to an exam attempt.
+    completed: false,
+    status: { $in: ['in_progress', 'paused'] }, // CHANGED: explicit resume-state validation before updating answers.
+  }).lean()
+
+  if (!attempt) {
+    return NextResponse.redirect(
+      new URL(`/exam/attempt/${attemptId}`, req.url), // CHANGED: redirect back to the runner if the attempt is not resumable.
+    )
+  }
+
   await submitAnswerToAttempt({
     attemptId,
     userId: session.user.id,
@@ -40,6 +57,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   })
 
   return NextResponse.redirect(
-    new URL(`/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific post-submit redirect.
+    new URL(`/exam/attempt/${attemptId}`, req.url), // CHANGED: exam-specific post-submit redirect keeps resume flow intact.
   )
 }

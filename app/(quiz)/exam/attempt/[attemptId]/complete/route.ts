@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { completeQuizAttempt } from '@/lib/actions/quizAttempt.result'
-import { connectToDatabase } from '@/lib/db'
-import { QuizAttempt } from '@/lib/actions/quizAttempt.shared'
+import {
+  connectToDatabase,
+  QuizAttempt,
+} from '@/lib/actions/quizAttempt.shared' // CHANGED: shared export is valid and keeps model access consistent.
 
 type RouteContext = {
   params: Promise<{
@@ -26,6 +28,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   const attempt = await QuizAttempt.findOne({
     _id: attemptId,
     user: session.user.id,
+    mode: 'exam', // CHANGED: restrict completion to exam attempts only.
+    completed: false,
+    status: { $in: ['in_progress', 'paused'] }, // CHANGED: only resumable/in-progress attempts may be completed here.
   }).lean()
 
   if (!attempt) {
@@ -35,14 +40,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     )
   }
 
-  if (attempt.completed) {
-    return NextResponse.json({ ok: true, completed: true }, { status: 200 })
-  }
-
   await completeQuizAttempt({
     attemptId,
     userId: session.user.id,
-  })
+  }) // CHANGED: completion is still allowed for timeout or final-question submission flow.
 
   return NextResponse.json({ ok: true, completed: true }, { status: 200 })
 }
