@@ -24,7 +24,9 @@ type ActiveAttempt = {
   _id: { toString(): string }
   mode: 'exam' | 'cpd'
   startedAt: Date
-  checkpointIndex?: number // CHANGED: resume should be driven by the persisted checkpoint boundary.
+  checkpointIndex: number // CHANGED: checkpoint is now required by the active-attempt contract.
+  currentQuestionIndex: number // CHANGED: consume the shared active-attempt state explicitly.
+  currentQuestion?: AttemptQuestion // CHANGED: consume the precomputed question from the shared active-attempt state.
   quiz: {
     name: string
     category: string
@@ -66,22 +68,23 @@ export default async function QuizAttemptRunnerPage({ params }: PageProps) {
     redirect(`/exam/attempt/${attemptId}/result`)
   }
 
-  const resumeIndex = Math.max(
-    0,
-    Math.min(
-      attempt.questions.length - 1,
-      typeof attempt.checkpointIndex === 'number' ? attempt.checkpointIndex : 0,
-    ),
-  ) // CHANGED: resume from the saved checkpoint boundary, not from answeredCount.
-
+  // CHANGED: prefer the shared precomputed currentQuestion, fallback to currentQuestionIndex, then checkpointIndex.
   const currentQuestion =
-    attempt.questions[resumeIndex] ?? attempt.questions[answeredCount]
+    attempt.currentQuestion ??
+    attempt.questions[attempt.currentQuestionIndex] ??
+    attempt.questions[attempt.checkpointIndex] ??
+    attempt.questions[answeredCount]
 
   if (!currentQuestion) {
     notFound()
   }
 
-  const currentQuestionNumber = resumeIndex + 1 // CHANGED: display stays synchronized with the resumed question position.
+  // CHANGED: display index follows the shared active-attempt state, not raw answeredCount alone.
+  const currentQuestionNumber =
+    Math.min(
+      Math.max(attempt.currentQuestionIndex, attempt.checkpointIndex),
+      attempt.questions.length - 1,
+    ) + 1
 
   return (
     <QuizExamAttemptClient

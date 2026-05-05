@@ -24,6 +24,8 @@ type QuizExamAttemptClientProps = {
   totalQuestions: number
   question: AttemptQuestion
   action: string
+  showTimer?: boolean // CHANGED: allow the page to control timer visibility explicitly.
+  onExpireAction?: 'complete' | 'none' // CHANGED: makes timer-expiry behavior explicit.
 }
 
 export function QuizExamAttemptClient({
@@ -36,12 +38,14 @@ export function QuizExamAttemptClient({
   totalQuestions,
   question,
   action,
+  showTimer = mode === 'exam', // CHANGED: default remains exam-only timer visibility.
+  onExpireAction = mode === 'exam' ? 'complete' : 'none', // CHANGED: default expiry behavior stays exam-specific.
 }: QuizExamAttemptClientProps) {
   const router = useRouter()
   const handledRef = useRef(false) // CHANGED: prevents duplicate POSTs and redirects.
 
   const handleExpire = useCallback(async () => {
-    if (mode !== 'exam' || handledRef.current) return
+    if (handledRef.current || onExpireAction !== 'complete') return // CHANGED: expiry action is now explicit.
     handledRef.current = true // CHANGED: lock before making the network request.
 
     try {
@@ -59,7 +63,7 @@ export function QuizExamAttemptClient({
     } catch {
       handledRef.current = false // CHANGED: allow retry on network errors.
     }
-  }, [attemptId, mode, router])
+  }, [attemptId, onExpireAction, router])
 
   return (
     <QuizActiveAttemptShell
@@ -71,7 +75,7 @@ export function QuizExamAttemptClient({
       totalQuestions={totalQuestions}
       question={question}
       action={action}
-      showTimer={mode === 'exam'}
+      showTimer={showTimer} // CHANGED: timer visibility is now configurable and aligned with the mode.
       onExpire={handleExpire} // CHANGED: timer expiry now triggers the safe client-side completion flow.
     />
   )

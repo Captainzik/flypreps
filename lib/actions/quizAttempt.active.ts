@@ -12,11 +12,40 @@ type ActiveAttemptQuestion = {
   selectedOptionIndex?: number
 }
 
+type ActiveAttemptResult = {
+  _id: { toString(): string }
+  mode: 'exam' | 'cpd'
+  status: string
+  resultVisibility: string
+  startedAt: Date
+  timeTakenMs?: number
+  questionTimeLimitMs?: number
+  checkpointDeadlineMs?: number
+  checkpointIndex: number
+  showTimer: boolean
+  timerState?: ReturnType<typeof getActiveAttemptTimerState>
+  questions: ActiveAttemptQuestion[]
+  currentQuestionIndex: number
+  currentQuestion?: ActiveAttemptQuestion
+  quiz: {
+    id: string
+    name: string
+    category: string
+    image?: string
+  }
+  answers: {
+    questionId: string
+    selectedOptionIndex?: number
+  }[]
+  answeredCount: number
+  completed: boolean
+}
+
 export async function getActiveQuizAttempt(params: {
   attemptId: string
   userId: string
   expectedMode?: 'exam' | 'cpd'
-}) {
+}): Promise<ActiveAttemptResult | null> {
   await connectToDatabase()
 
   const attempt = await QuizAttempt.findOne({
@@ -75,15 +104,24 @@ export async function getActiveQuizAttempt(params: {
     (a) => typeof a.selectedOptionIndex === 'number',
   ).length
 
+  // CHANGED: checkpointIndex is the resume anchor; currentQuestionIndex is only the next-pointer metadata.
   const checkpointIndex = Math.max(
     0,
-    Math.min(Number(attempt.checkpointIndex ?? 0), questions.length - 1),
-  ) // CHANGED: use checkpointIndex as the resume anchor instead of currentQuestionIndex.
+    Math.min(
+      Number(attempt.checkpointIndex ?? 0),
+      Math.max(questions.length - 1, 0),
+    ),
+  )
 
-  const currentQuestionIndex = Number(
-    attempt.currentQuestionIndex ?? checkpointIndex,
-  ) // CHANGED: keep currentQuestionIndex as metadata, but fall back to checkpointIndex for compatibility.
-  const currentQuestion = questions[checkpointIndex] ?? undefined // CHANGED: render the resumed question from the stored checkpoint boundary.
+  // CHANGED: ensure the next-pointer never points before the resumed checkpoint.
+  const currentQuestionIndex = Math.max(
+    checkpointIndex,
+    Number(attempt.currentQuestionIndex ?? checkpointIndex),
+  )
+
+  // CHANGED: render the resumed question from the stored checkpoint boundary, falling back to next pointer.
+  const currentQuestion =
+    questions[checkpointIndex] ?? questions[currentQuestionIndex] ?? undefined
 
   const timerState = getActiveAttemptTimerState({
     mode: attempt.mode,

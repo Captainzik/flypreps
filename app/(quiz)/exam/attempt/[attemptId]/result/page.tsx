@@ -36,9 +36,9 @@ type QuizAttemptResult = {
   percentage: number
   completedAt?: Date | string
   answers: ResultAnswer[]
-  startedAt?: Date // CHANGED: summary component needs the original attempt timing context.
-  timedOut?: boolean // CHANGED: summary component can now display timeout messaging.
-  forceCompletedByTimeout?: boolean // CHANGED: summary component can now display timeout messaging.
+  startedAt?: Date
+  timedOut?: boolean
+  forceCompletedByTimeout?: boolean
 }
 
 export default async function QuizAttemptResultPage({ params }: PageProps) {
@@ -71,7 +71,13 @@ export default async function QuizAttemptResultPage({ params }: PageProps) {
         score={result.score}
         maxScore={result.maxScore}
         percentage={result.percentage}
-        startedAt={result.startedAt ?? new Date()} // CHANGED: fallback keeps component typed even if startedAt is absent.
+        startedAt={
+          result.startedAt instanceof Date
+            ? result.startedAt
+            : result.startedAt
+              ? new Date(result.startedAt)
+              : new Date()
+        } // CHANGED: keeps the summary typed and preserves the original attempt timing context.
         completedAt={
           result.completedAt instanceof Date
             ? result.completedAt

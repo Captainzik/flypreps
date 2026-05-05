@@ -30,6 +30,23 @@ type CompleteQuizAttemptResult = {
   timeTakenMs?: number
 }
 
+function isRetryableMongoError(error: unknown) {
+  const err = error as {
+    code?: number
+    errorLabels?: string[]
+    message?: string
+  }
+
+  return (
+    err?.code === 112 || // write conflict
+    err?.errorLabels?.includes('TransientTransactionError') ||
+    err?.errorLabels?.includes('UnknownTransactionCommitResult') ||
+    /Write conflict|TransientTransactionError|UnknownTransactionCommitResult/i.test(
+      err?.message ?? '',
+    )
+  )
+}
+
 export async function completeQuizAttempt(
   input: CompleteQuizAttemptInput,
 ): Promise<CompleteQuizAttemptResult> {
@@ -37,145 +54,163 @@ export async function completeQuizAttempt(
 
   const { attemptId, userId, attemptKey } = input
 
-  const session = await mongoose.startSession()
-  session.startTransaction()
+  const maxAttempts = 3 // CHANGED: retry write-conflict transactions instead of failing immediately.
+  let lastError: unknown
 
-  try {
-    const attempt = await QuizAttempt.findOne({
-      _id: attemptId,
-      user: userId,
-    }).session(session)
+  for (let attemptNumber = 1; attemptNumber <= maxAttempts; attemptNumber++) {
+    const session = await mongoose.startSession()
+    session.startTransaction()
 
-    if (!attempt) throw new Error('Attempt not found')
+    try {
+      const attempt = await QuizAttempt.findOne({
+        _id: attemptId,
+        user: userId,
+      }).session(session)
 
-    if (attempt.completed) {
+      if (!attempt) throw new Error('Attempt not found')
+
+      if (attempt.completed) {
+        await session.commitTransaction()
+        return {
+          attemptId: attempt._id.toString(),
+          score: attempt.score,
+          maxScore: attempt.maxScore,
+          percentage: attempt.percentage,
+          completedAt: attempt.completedAt ?? new Date(),
+          idempotentReplay: true,
+          timeTakenMs: attempt.timeTakenMs,
+        }
+      }
+
+      if (attemptKey && !attempt.attemptKey) {
+        attempt.attemptKey = attemptKey
+      }
+
+      const quiz = await Quiz.findById(attempt.quiz)
+        .select('_id questions allowedModes category')
+        .populate('questions')
+        .lean()
+        .session(session)
+
+      if (!quiz) throw new Error('Quiz not found')
+
+      const mode =
+        attempt.mode || getAttemptMode({ allowedModes: quiz.allowedModes })
+      const modeRules = getModeRules(mode)
+      const populatedQuestions = quiz.questions as unknown as IQuestion[]
+      const questionMap = new Map(
+        populatedQuestions
+          .filter((q) => q._id)
+          .map((q) => [q._id!.toString(), q]),
+      )
+
+      let score = 0
+      const maxScore = populatedQuestions.length * (mode === 'exam' ? 2 : 10)
+
+      const gradedAnswers = attempt.answers.map((ans) => {
+        const q = questionMap.get(ans.question.toString())
+        if (!q) {
+          return { ...ans, isCorrect: false, pointsEarned: 0 }
+        }
+
+        const correctOptionIndex = q.options.findIndex((o) => o.isCorrect)
+        if (correctOptionIndex === -1) {
+          throw new Error(`Question ${q._id} has no correct option`)
+        }
+
+        const isCorrect =
+          typeof ans.selectedOptionIndex === 'number' &&
+          ans.selectedOptionIndex === correctOptionIndex
+
+        const pointsEarned = isCorrect ? (mode === 'exam' ? 2 : 10) : 0
+        score += pointsEarned
+
+        return { ...ans, isCorrect, pointsEarned }
+      })
+
+      const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
+      const completedAt = new Date()
+      const timeTakenMs = getElapsedMs(attempt.startedAt, completedAt)
+
+      const forceTimeout =
+        mode === 'exam'
+          ? shouldForceExamTimeout({
+              mode,
+              startedAt: attempt.startedAt,
+              now: completedAt,
+              totalQuestions: populatedQuestions.length,
+            })
+          : false
+
+      attempt.answers = gradedAnswers as IQuizAttempt['answers']
+      attempt.score = score
+      attempt.maxScore = maxScore
+      attempt.percentage = percentage
+      attempt.completed = true
+      attempt.completedAt = completedAt
+      attempt.timeTakenMs = timeTakenMs
+      attempt.status = forceTimeout ? 'ended' : 'completed'
+      attempt.endedAt = forceTimeout ? completedAt : attempt.endedAt
+      attempt.endedReason = forceTimeout ? 'timeout' : 'completed' // CHANGED: keep terminal state explicit and consistent with checkpoint flow.
+      attempt.resultVisibility = modeRules.resultVisibility
+      attempt.timedOut = forceTimeout
+      attempt.forceCompletedByTimeout = forceTimeout
+      attempt.questionsAnswered = gradedAnswers.length
+      attempt.category = quiz.category
+      attempt.xpEarned = computeAttemptXp({ mode, score, maxScore, percentage })
+      attempt.checkpointIndex = attempt.questionsAnswered // CHANGED: final completion aligns checkpoint state with the finished attempt.
+      attempt.checkpointSavedAt = completedAt // CHANGED: completed attempts carry the final checkpoint timestamp.
+      attempt.lastCheckpointAt = completedAt // CHANGED: keep last checkpoint timing aligned at completion.
+
+      await attempt.save({ session })
+
+      await upsertLeaderboardFromAttempt({
+        userId,
+        category: quiz.category,
+        score,
+        percentage,
+        attemptedAt: completedAt,
+        session,
+      })
+
+      void buildAudioEventEnvelope(userId, {
+        type: 'quiz_complete',
+        mode,
+        score,
+        percentage,
+      })
+
       await session.commitTransaction()
+
       return {
         attemptId: attempt._id.toString(),
-        score: attempt.score,
-        maxScore: attempt.maxScore,
-        percentage: attempt.percentage,
-        completedAt: attempt.completedAt ?? new Date(),
-        idempotentReplay: true,
-        timeTakenMs: attempt.timeTakenMs,
+        score,
+        maxScore,
+        percentage,
+        completedAt,
+        idempotentReplay: false,
+        timeTakenMs,
       }
-    }
+    } catch (error) {
+      lastError = error
+      await session.abortTransaction()
+      session.endSession()
 
-    if (attemptKey && !attempt.attemptKey) {
-      attempt.attemptKey = attemptKey
-    }
-
-    const quiz = await Quiz.findById(attempt.quiz)
-      .select('_id questions allowedModes category')
-      .populate('questions')
-      .lean()
-      .session(session)
-
-    if (!quiz) throw new Error('Quiz not found')
-
-    const mode =
-      attempt.mode || getAttemptMode({ allowedModes: quiz.allowedModes })
-    const modeRules = getModeRules(mode)
-    const populatedQuestions = quiz.questions as unknown as IQuestion[]
-    const questionMap = new Map(
-      populatedQuestions
-        .filter((q) => q._id)
-        .map((q) => [q._id!.toString(), q]),
-    )
-
-    let score = 0
-    const maxScore = populatedQuestions.length * (mode === 'exam' ? 2 : 10)
-
-    const gradedAnswers = attempt.answers.map((ans) => {
-      const q = questionMap.get(ans.question.toString())
-      if (!q) {
-        return { ...ans, isCorrect: false, pointsEarned: 0 }
+      if (isRetryableMongoError(error) && attemptNumber < maxAttempts) {
+        continue // CHANGED: retry transient write conflicts caused by concurrent completion / resume requests.
       }
 
-      const correctOptionIndex = q.options.findIndex((o) => o.isCorrect)
-      if (correctOptionIndex === -1) {
-        throw new Error(`Question ${q._id} has no correct option`)
+      throw error
+    } finally {
+      if (session.inTransaction()) {
+        await session.endSession()
       }
-
-      const isCorrect =
-        typeof ans.selectedOptionIndex === 'number' &&
-        ans.selectedOptionIndex === correctOptionIndex
-
-      const pointsEarned = isCorrect ? (mode === 'exam' ? 2 : 10) : 0
-      score += pointsEarned
-
-      return { ...ans, isCorrect, pointsEarned }
-    })
-
-    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
-    const completedAt = new Date()
-    const timeTakenMs = getElapsedMs(attempt.startedAt, completedAt)
-
-    const forceTimeout =
-      mode === 'exam'
-        ? shouldForceExamTimeout({
-            mode,
-            startedAt: attempt.startedAt,
-            now: completedAt,
-            totalQuestions: populatedQuestions.length,
-          })
-        : false
-
-    attempt.answers = gradedAnswers as IQuizAttempt['answers']
-    attempt.score = score
-    attempt.maxScore = maxScore
-    attempt.percentage = percentage
-    attempt.completed = true
-    attempt.completedAt = completedAt
-    attempt.timeTakenMs = timeTakenMs
-    attempt.status = forceTimeout ? 'ended' : 'completed'
-    attempt.endedAt = forceTimeout ? completedAt : attempt.endedAt
-    attempt.endedReason = forceTimeout ? 'timeout' : 'completed' // CHANGED: keep terminal state explicit and consistent with checkpoint flow.
-    attempt.resultVisibility = modeRules.resultVisibility
-    attempt.timedOut = forceTimeout
-    attempt.forceCompletedByTimeout = forceTimeout
-    attempt.questionsAnswered = gradedAnswers.length
-    attempt.category = quiz.category
-    attempt.xpEarned = computeAttemptXp({ mode, score, maxScore, percentage })
-    attempt.checkpointIndex = attempt.questionsAnswered // CHANGED: final completion aligns checkpoint state with the finished attempt.
-    attempt.checkpointSavedAt = completedAt // CHANGED: completed attempts carry the final checkpoint timestamp.
-    attempt.lastCheckpointAt = completedAt // CHANGED: keep last checkpoint timing aligned at completion.
-
-    await attempt.save({ session })
-
-    await upsertLeaderboardFromAttempt({
-      userId,
-      category: quiz.category,
-      score,
-      percentage,
-      attemptedAt: completedAt,
-      session,
-    })
-
-    void buildAudioEventEnvelope(userId, {
-      type: 'quiz_complete',
-      mode,
-      score,
-      percentage,
-    })
-
-    await session.commitTransaction()
-
-    return {
-      attemptId: attempt._id.toString(),
-      score,
-      maxScore,
-      percentage,
-      completedAt,
-      idempotentReplay: false,
-      timeTakenMs,
     }
-  } catch (error) {
-    await session.abortTransaction()
-    throw error
-  } finally {
-    session.endSession()
   }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed to complete attempt')
 }
 
 export async function getQuizAttemptResult(params: {
